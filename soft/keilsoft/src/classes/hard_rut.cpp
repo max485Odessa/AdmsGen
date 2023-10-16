@@ -219,6 +219,25 @@ void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt)
 
 
 
+void _pin_low_init_in_pull (S_GPIOPIN *lp_pin, uint8_t cnt, bool vl)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+	while (cnt)
+		{
+		hard_gpio_clock_enable (lp_pin->port);
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+		GPIO_InitStructure.Pull = (vl)?GPIO_PULLUP:GPIO_PULLDOWN;
+		GPIO_InitStructure.Alternate = 0;
+		GPIO_InitStructure.Pin = lp_pin->pin;
+		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
+		lp_pin++;
+		cnt--;
+		}
+}
+
+
+
 
 void _pin_low_init_in (S_GPIOPIN *lp_pin, unsigned char cnt)
 {

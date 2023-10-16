@@ -2,12 +2,13 @@
 
 
 
-extern void Delay_Ms(unsigned short timss);
 
 
 
 TST7565RSPI::TST7565RSPI (S_GPIOPIN *p)
 {
+	rawpins = p;
+	_pin_low_init_out_pp (rawpins, EST7565P_ENDENUM);
 }
 
 
@@ -159,55 +160,15 @@ spi_cmd_single (bSend >> 2);
 void TST7565RSPI::SpiModeInit ()
 {
 	_pin_low_init_out_pp ((S_GPIOPIN*)&rawpins, EST7565P_ENDENUM);
-	
-	/*
-	GPIO_InitTypeDef GPIO_InitStructure;
-  RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOA, ENABLE);
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_10 | GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_7;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	*/
-	
-	
-	//GPIO_WriteBit (GPIOB, GPIO_Pin_10, Bit_RESET);		// clk
+
 	rawpins[EST7565P_SCL].port->BSRR = rawpins[EST7565P_SCL].pin << 16;			// clk = 0
 	CSSetTo (1);
 	RS_To (1);
 	ResetTo (0);
 	SYSBIOS::Wait (50);
-	//Delay_us (50000);
 	ResetTo (1);
 	SYSBIOS::Wait (50);
-	//Delay_us (50000);
-
 }
-
-
-
- // U8X8_C(0x0e2),            			/* soft reset */
- // U8X8_C(0x0ae),		                /* display off */
-//  U8X8_C(0x040),		                /* set display start line to 0 */
-  
- // U8X8_C(0x0a1),		                /* ADC set to reverse */
- // U8X8_C(0x0c8),		                /* common output mode */
-
-  
-//  U8X8_C(0x0a6),		                /* display normal, bit val 0: LCD pixel off. */
-//  U8X8_C(0x0a2),		                /* LCD bias 1/9 */
-//  U8X8_C(0x02f),		                /* all power  control circuits on (regulator, booster and follower) */
-//  U8X8_CA(0x0f8, 0x000),		/* set booster ratio to 4x */
-//  U8X8_C(0x027),		                /* set V0 voltage resistor ratio to max  */
-//  U8X8_CA(0x081, 0x007),		/* set contrast, contrast value, EA default: 0x016 */
-  
-//  U8X8_C(0x0ae),		                /* display off */
- // U8X8_C(0x0a5),		                /* enter powersafe: all pixel on, issue 142 */
-  
-//  U8X8_END_TRANSFER(),             	/* disable chip */
-//  U8X8_END()             			/* end of sequence */
 
 
 

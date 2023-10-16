@@ -28,6 +28,7 @@ void _pin_low_init_out_od ( S_GPIOPIN *lp_pin, uint8_t cnt );
 void _pin_low_init_out_pp ( S_GPIOPIN *lp_pin, uint8_t cnt );
 void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin );
 void _pin_low_init_in ( S_GPIOPIN *lp_pin, uint8_t cnt );
+void _pin_low_init_in_pull (S_GPIOPIN *lp_pin, uint8_t cnt, bool vl);
 void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md);
 void _pin_low_init_adc ( S_GPIOPIN *lp_pin, uint8_t cnt );
 bool _pin_input ( S_GPIOPIN *lp_pin );

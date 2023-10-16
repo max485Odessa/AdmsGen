@@ -14,6 +14,49 @@ typedef void (*cb_reset) (void);
 	reset ();
 }
 
+static const uint8_t C_8BIT_POL = 0x41;
+static const uint32_t C_BITMASK_HB = 0x80000000;
+uint32_t CalcCRC32Data (uint8_t *lSrc, uint32_t siz)
+{
+	uint32_t rv = 0;
+	uint8_t dat;
+	uint32_t z_cnt = 0;
+	while (siz)
+		{
+		dat = *lSrc;
+		if (!dat)
+			{
+			rv += siz;
+			z_cnt++;
+			}
+		else
+			{
+			if (dat & C_8BIT_POL)
+				{
+				rv += 0x24;
+				}
+			else
+				{
+				rv += 0x33;
+				}
+			}
+		if (rv & C_BITMASK_HB)
+			{
+			rv <<= 1;
+			rv |= 1;
+			}
+		else
+			{
+			rv <<= 1;
+			}
+		rv += dat;
+		lSrc++;
+		siz--;
+		}
+	rv += z_cnt;
+return rv;
+}
+
 
 unsigned short SwapShort (unsigned short dat)
 {
@@ -1915,5 +1958,23 @@ bool addval_u32 (uint32_t &v, uint32_t av)
 		}
 	return rv;
 }
+
+
+
+uint32_t lenstr_max (const char *lsrt, uint32_t maxsz)
+{
+	uint32_t sz = 0;
+	if (lsrt)
+		{
+		while (maxsz)
+			{
+			if (!*lsrt++) break;
+			sz++;	
+			maxsz--;
+			}
+		}
+return sz;
+}
+
 
 

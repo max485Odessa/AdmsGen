@@ -60,6 +60,9 @@ bool addval_u32 (uint32_t &v, uint32_t av);
 unsigned long RLE_Coding_A (BUFPAR *InRaw, BUFPAR *OutCode);
 unsigned char *UlongToStr_cnt (unsigned char *lpDest,unsigned long datas,unsigned char cntlens);
 void UlongToHex (unsigned char *lpDest, unsigned long datasl);
+uint32_t CalcCRC32Data (uint8_t *lSrc, uint32_t siz);
+uint32_t lenstr_max (const char *lsrt, uint32_t maxsz);
+
 
 #endif
 

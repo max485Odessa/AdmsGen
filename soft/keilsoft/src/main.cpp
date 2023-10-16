@@ -5,30 +5,47 @@
 #include "TFTASKIF.h"
 #include "ST7565R_SPI.H"
 #include "LCD132x64.h"
+#include "TEASYKEYS.h"
+#include "TCORE.h"
+#include "TM24Cxxx.h"
+#include "I2CSOFTWARE.H"
+
 
 
 void SystemClockHSE_Config (void);
 static S_GPIOPIN pinphase_in_a = {};
 static S_GPIOPIN pinphase_out_a = {};
-static const S_GPIOPIN rawpins[EST7565P_ENDENUM] = {/*EST7565P_CS*/{GPIOA,GPIO_PIN_11}, /*EST7565P_REST*/{GPIOA, GPIO_PIN_10}, /*EST7565P_RS*/{GPIOA, GPIO_PIN_9},\
+	
+static S_GPIOPIN pinsi2c_a[EARRI2CPIN_ENDENUM] = {{GPIOB,GPIO_PIN_3}/*scl*/, {GPIOB,GPIO_PIN_4}/*sda*/};
+static const S_GPIOPIN rawpins_keys[EJSTCPINS_ENDENUM] = {{GPIOB,GPIO_PIN_5}, {GPIOB,GPIO_PIN_6}, {GPIOB,GPIO_PIN_7}, {GPIOB,GPIO_PIN_8}, {GPIOB,GPIO_PIN_9}};
+static const S_GPIOPIN rawpins_lcd[EST7565P_ENDENUM] = {/*EST7565P_CS*/{GPIOA,GPIO_PIN_11}, /*EST7565P_REST*/{GPIOA, GPIO_PIN_10}, /*EST7565P_RS*/{GPIOA, GPIO_PIN_9},\
 /*EST7565P_SCL*/ {GPIOA, GPIO_PIN_8}, /*EST7565P_SI*/{GPIOB, GPIO_PIN_15}};
 static TCONTRECT *rectifier;
 static TST7565RSPI *lcd;
 static TLCDCANVABW *canva;
+static TEASYKEYS *keys;
+static TCORERCT *core;
+static TI2CIFACE *busi2c;
+static TM24C16 *memi2c;
 	
 #ifdef __cplusplus
  extern "C" {
 #endif 
+
+
 
 void SysTick_Handler(void)
 {
   HAL_IncTick();
 	SYSBIOS::EXECUTE_PERIODIC_ISR (1);
 }
-	 
+
+
+
 #ifdef __cplusplus
 }
 #endif
+
 
 
 static void frendly_task ()
@@ -40,15 +57,45 @@ static void frendly_task ()
 
 
 
+//static uint8_t testbufwr[512];
+//static uint8_t testbufrd[512];
+
+
+
 int main ()
 {
+	static uint8_t updline_cnt = 0;
 	SystemClockHSE_Config ();
+	keys = new TEASYKEYS (const_cast<S_GPIOPIN*>(rawpins_keys));
+	// pinsi2c_a
+	busi2c = new TI2CIFACE (pinsi2c_a, 50);
+	memi2c = new TM24C16 (busi2c, 0);
+	
+	
+	//memi2c->write (0, testbufwr, 512); 
+	//memi2c->read (0, testbufrd, 512);
+
 	canva = new TLCDCANVABW ();
-	lcd = new TST7565RSPI (const_cast<S_GPIOPIN*>(rawpins));
+	canva->Init ();
+	lcd = new TST7565RSPI (const_cast<S_GPIOPIN*>(rawpins_lcd));
+	lcd->LCD_init ();
 	rectifier = new TCONTRECT (&pinphase_in_a, &pinphase_out_a, ESYSTIM_TIM2, 1000000, 10);
+	
+	canva->DrawCircle (20, 20, 10);
+	
+	core = new TCORERCT (rectifier, canva, keys, memi2c);
+	updline_cnt = C_LCD_PAGE_AMOUNT;
+	
 	while (true)
 		{
 		frendly_task ();
+			
+		if (core->is_lcd_update ()) updline_cnt = C_LCD_PAGE_AMOUNT;
+		if (updline_cnt)
+			{
+			lcd->RefreshAllDisplay_L (canva);
+			updline_cnt--;
+			}
 		}
 }
 
