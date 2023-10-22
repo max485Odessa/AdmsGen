@@ -34,7 +34,7 @@ unsigned short abs16 (short datas);
 unsigned long abs32 (long datas);
 void *memset (void *lDst, unsigned char dat, long sizes);
 void *fillmem (void *lDst, unsigned char dat, long sizes);
-//void *memcpy ( void * destination, const void * source, long num );
+uint32_t GN_CRC32 (void *ldata, uint32_t size);
 //uint32_t HAL_GetTick ();
 //unsigned long HAL_RCC_GetPCLK1Freq ();
 unsigned long str_size (const char *lsrt);

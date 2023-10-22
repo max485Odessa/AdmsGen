@@ -9,7 +9,6 @@
 
 
 
-enum EJSTCPINS {EJSTCPINS_RIGHT = 0, EJSTCPINS_LEFT, EJSTCPINS_UP, EJSTCPINS_DOWN , EJSTCPINS_OK, EJSTCPINS_ENDENUM};
 enum EJSTMSG {EJSTMSG_NONE = 0, EJSTMSG_CLICK, EJSTMSG_DBLCLICK, EJSTMSG_ENDENUM = 3};
 
 
@@ -31,7 +30,7 @@ typedef struct {
 class TEASYKEYS: public TFFC {
 		S_KEYSETS_T *pins;
 		const uint8_t c_pins_cnt;
-		uint8_t gmsg_ix;
+		long gmsg_ix;
 
 		void clear_key (S_KEYSETS_T &kp);
 		void update_push_state_all ();
@@ -45,15 +44,15 @@ class TEASYKEYS: public TFFC {
 		uint32_t last_pushed_mask;
 	
 	public:
-		TEASYKEYS (S_GPIOPIN *p);
+		TEASYKEYS (S_GPIOPIN *p, uint8_t k_cnt);
 	
-		void block_next_msg (EJSTCPINS p);
-		void block_time (EJSTCPINS p, uint32_t tbl);
+		void block_next_msg (long p);
+		void block_time (long p, uint32_t tbl);
 	
 		uint32_t get_pushed_mask ();
-		uint32_t get_pushtime_cur (EJSTCPINS p);
-		uint32_t get_pushtime_last (EJSTCPINS p);
-		EJSTMSG get_message (EJSTCPINS &kn);	
+		uint32_t get_pushtime_cur (long p);
+		uint32_t get_pushtime_last (long p);
+		EJSTMSG get_message (long &kn);	
 
 
 };

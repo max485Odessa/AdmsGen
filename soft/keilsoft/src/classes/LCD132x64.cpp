@@ -159,7 +159,7 @@ return (MaxFontMicro *)SystemFont;
 
 void TLCDCANVABW::Init()
 {
-SetFonts ((MaxFontMicro*)resname_wendy16_engl_f);
+//SetFonts ((MaxFontMicro*)resname_wendy16_engl_f);
 Canvas_Width = LCD_WIDTH_PIXELS;
 Canvas_Height = LCD_HEIGHT_PIXELS;
 CntByteLine = Canvas_Width / 8;

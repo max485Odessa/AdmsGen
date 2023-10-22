@@ -14,6 +14,37 @@ typedef void (*cb_reset) (void);
 	reset ();
 }
 
+
+uint32_t GN_CRC32 (void *ldata, uint32_t size)
+{
+const uint32_t one_sig = 0x724169A3;
+const uint32_t zero_sig = 0x28181277;
+const uint8_t mask_sig = 0x18;
+uint32_t crc = 0;
+if (ldata && size)
+    {
+    uint8_t *src = (uint8_t*)ldata;
+    uint8_t dat;
+    while (size)
+        {
+        dat = *src++;
+        if (dat & mask_sig)
+            {
+            crc += one_sig;
+            }
+        else
+            {
+            crc += zero_sig;
+            }
+        crc <<= 1;
+        crc += dat;
+        size--;
+        }
+    }
+return crc;
+}
+
+
 static const uint8_t C_8BIT_POL = 0x41;
 static const uint32_t C_BITMASK_HB = 0x80000000;
 uint32_t CalcCRC32Data (uint8_t *lSrc, uint32_t siz)

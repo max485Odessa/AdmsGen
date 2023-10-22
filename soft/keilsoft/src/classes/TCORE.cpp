@@ -1,21 +1,19 @@
 #include "TCORE.h"
+extern const unsigned char resname_ptmono8_f[];
 
 
-static const float c_angle_step_change = 0.5;
-const static S_CONTROL_FLOAT_T param_press_profile = {EPARAMTYPE_FLOAT, "profile", 1, 6, 3};
-const static S_CONTROL_FLOAT_T param_press_on_a = {EPARAMTYPE_FLOAT, "presure_a.on", 1, 6, 3};
-const static S_CONTROL_FLOAT_T param_press_on_b = {EPARAMTYPE_FLOAT, "presure_b.on", 1, 6, 3};
-const static S_CONTROL_FLOAT_T param_press_off_a = {EPARAMTYPE_FLOAT, "presure_a.off", 1, 6, 3};
-const static S_CONTROL_FLOAT_T param_press_off_b = {EPARAMTYPE_FLOAT, "presure_b.off", 1, 6, 3};
-const static S_CONTROL_UINT32_T param_time_relax = {EPARAMTYPE_U32, "time.relax", 1000, 1000, 1000};
-const static S_CONTROL_UINT32_T param_station_mode = {EPARAMTYPE_U32, "station.mode", 2, 3, 2};		// 2 - auto/manual
-const static S_CONTROL_FLOAT_T param_press_clbr_zero = {EPARAMTYPE_FLOAT, "pres.calibr.zero", 0, 6, 0.5F};
-const static S_CONTROL_FLOAT_T param_press_clbr_max = {EPARAMTYPE_FLOAT, "pres.calibr.max", 0, 6, 4.5F};
-const static S_CONTROL_FLOAT_T param_press_bar = {EPARAMTYPE_FLOAT, "pres.bar", 0.1, 20, 12};
+//static const float c_angle_step_change = 0.5;
+const static S_MVPARAM_U32_T param_rectifier_enable = {"rectifier.en", MAV_PARAM_TYPE_UINT32, 0, 0, 1, 0, 1};
+const static S_MVPARAM_U32_T param_speed_ctrl_enable = {"speed.cont.en", MAV_PARAM_TYPE_UINT32, 0, 0, 1, 0, 1};
+const static S_MVPARAM_FLOAT_T param_r_angle_on = {"angl.on", MAV_PARAM_TYPE_REAL32,  0, 0, 180, 50, 0.2F};
+const static S_MVPARAM_FLOAT_T param_r_angle_off = {"angl.off", MAV_PARAM_TYPE_REAL32,  0, 0, 180, 90, 0.2F};
+const static S_MVPARAM_U32_T param_rpm_speed_start = {"rpm.s", MAV_PARAM_TYPE_UINT32, 1, 6, 3, 1, 1};
+const static S_MVPARAM_U32_T param_rpm_speed_stop = {"rpm.p" , MAV_PARAM_TYPE_UINT32, 1000, 1000, 1000, 1, 1};
 
-static const S_HDRPARAM_T *curlist[EPRMIX_ENDENUM] = {(S_HDRPARAM_T*)&param_press_profile, (S_HDRPARAM_T*)&param_press_on_a, (S_HDRPARAM_T*)&param_press_off_a, \
-(S_HDRPARAM_T*)&param_press_on_b, (S_HDRPARAM_T*)&param_press_off_b, (S_HDRPARAM_T*)&param_time_relax, (S_HDRPARAM_T*)&param_station_mode, \
-(S_HDRPARAM_T*)&param_press_clbr_zero, (S_HDRPARAM_T*)&param_press_clbr_max, (S_HDRPARAM_T*)&param_press_bar,\
+
+
+static const S_MVPARAM_HDR_T *curlist[EPRMIX_ENDENUM] = {(S_MVPARAM_HDR_T*)&param_rectifier_enable, (S_MVPARAM_HDR_T*)&param_speed_ctrl_enable, (S_MVPARAM_HDR_T*)&param_r_angle_on, \
+(S_MVPARAM_HDR_T*)&param_r_angle_off, (S_MVPARAM_HDR_T*)&param_rpm_speed_start, (S_MVPARAM_HDR_T*)&param_rpm_speed_stop, \
 };
 
 
@@ -23,60 +21,75 @@ static const S_HDRPARAM_T *curlist[EPRMIX_ENDENUM] = {(S_HDRPARAM_T*)&param_pres
 TCORERCT::TCORERCT (TCONTRECT *rectifier, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m)
 {
 	memi2c = m;
-	params = new IRFPARAMS (memi2c, (S_HDRPARAM_T*)curlist, EPRMIX_ENDENUM);
+	params = new TPARAMCONTRL (memi2c, 0, 8192, (S_MVPARAM_HDR_T**)curlist, EPRMIX_ENDENUM);
+	params_to_local_data ();
 	rectifier_contrl = rectifier;
 	canva = c;
 	keys = k;
 	f_lcd_needupdate = true;
-	cursor_ix = -1;
+	//cursor_ix = -1;
 	str_tmp.set_space (strtemporarymem, sizeof(strtemporarymem)-1);
-	if (!load_settings ())
-		{
-		sets_to_def ();
-		save_settings ();
-		}
+	set_page (EPAGE_MAIN);
 }
 
 
 
-void TCORERCT::sets_to_def ()
+void TCORERCT::params_to_local_data ()
 {
-	sets.f_sets_rectifier_enabled = false;
-	sets.f_sets_speed_control = false;
-	sets.sets_angle_off = 90;
-	sets.sets_angle_on = 50;
-	sets.sets_speed_off_rpm = 0;
-	sets.sets_speed_on_rpm = 0;
-	f_settings_changed = true;
+S_MDAT_T *data;
+	do	{
+			data = params->get_value (EPRMIX_RECT_ENABLE);
+			if (!data) break;
+			sets.f_sets_rectifier_enabled = data->u.u32;
+		
+			data = params->get_value (EPRMIX_SPEED_CTRL_ENABLE);
+			if (!data) break;
+			sets.f_sets_speed_control = data->u.u32;
+		
+			data = params->get_value (EPRMIX_R_ANGLE_ON);
+			if (!data) break;
+			sets.sets_angle_on = data->u.f;
+		
+			data = params->get_value (EPRMIX_R_ANGLE_OFF);
+			if (!data) break;
+			sets.sets_angle_off = data->u.f;
+		
+			data = params->get_value (EPRMIX_SPEED_START);
+			if (!data) break;
+			sets.sets_speed_on_rpm = data->u.f;
+		
+			data = params->get_value (EPRMIX_SPEED_STOP);
+			if (!data) break;
+			sets.sets_speed_off_rpm = data->u.f;
+		
+			} while (false);
 }
 
 
 
-bool TCORERCT::load_settings ()
+void TCORERCT::local_data_to_params ()
 {
-	bool rv = false;
-	S_SETTINGS_T tmpdata;
-	memi2c->read (0, (uint8_t*)&tmpdata, sizeof(tmpdata));
+S_MDAT_T data;
+	do	{
+			data.u.u32 = sets.f_sets_rectifier_enabled;
+			if (!params->set_value (EPRMIX_RECT_ENABLE, data)) break;
+		
+			data.u.u32 = sets.f_sets_speed_control;
+			if (!params->set_value (EPRMIX_SPEED_CTRL_ENABLE, data)) break;
 	
-	uint32_t crc = CalcCRC32Data ((uint8_t*)&tmpdata, sizeof(S_INIDATA_T));
-	if (tmpdata.crc32 == crc)
-		{
-		f_settings_changed = false;
-		sets = tmpdata.data;
-		rv = true;
-		}
-	return rv;
-}
+			data.u.f = sets.sets_angle_on;
+			if (!params->set_value (EPRMIX_R_ANGLE_ON, data)) break;
+		
+			data.u.f = sets.sets_angle_off;
+			if (!params->set_value (EPRMIX_R_ANGLE_OFF, data)) break;
+		
+			data.u.f = sets.sets_speed_on_rpm;
+			if (!params->set_value (EPRMIX_SPEED_START, data)) break;
 
-
-
-void TCORERCT::save_settings ()
-{
-	S_SETTINGS_T tmpdata;
-	tmpdata.data = sets;
-	tmpdata.crc32 = CalcCRC32Data ((uint8_t*)&tmpdata, sizeof(S_INIDATA_T));
-	memi2c->write (0, (uint8_t*)&tmpdata, sizeof(tmpdata));
-	f_settings_changed = false;
+			data.u.f = sets.sets_speed_off_rpm;
+			if (!params->set_value (EPRMIX_SPEED_STOP, data)) break;
+		
+			} while (false);
 }
 
 
@@ -104,20 +117,217 @@ void TCORERCT::set_page (EPAGE p)
 
 
 
-extern const unsigned char resname_wendy16_engl_f[];
-void TCORERCT::draw_main_page_task (const S_PGMESSAGE_T &msg)
+
+
+uint8_t TCORERCT::gui_item_param_height ()
 {
-	canva->SetFonts ((MaxFontMicro*)&resname_wendy16_engl_f);
-	
+	return canva->GetFontHeight () + 2;
 }
 
+
+
+uint8_t TCORERCT::border_updown_height ()
+{
+	return (canva->GetCanvaHeight () % gui_item_param_height ());
+}
+
+
+
+uint8_t TCORERCT::gui_dislp_item_cnt ()
+{
+	return canva->GetCanvaHeight () /gui_item_param_height ();
+}
+
+
+
+void TCORERCT::update_view_start ()
+{
+	long view_last = view_param_start_ix + gui_dislp_item_cnt () - 1;
+
+	if (cursor_param_ix < view_param_start_ix)
+		{
+		view_param_start_ix = cursor_param_ix;
+		}
+	else
+		{
+		if (cursor_param_ix > view_last) 
+			{
+			view_param_start_ix = cursor_param_ix - gui_dislp_item_cnt () + 1;
+			if (view_param_start_ix < 0) view_param_start_ix = 0;
+			}
+		}
+}
+
+
+
+void TCORERCT::cursor_up ()
+{
+	cursor_param_ix--;
+	if (cursor_param_ix < 0) cursor_param_ix = 0;
+
+	//update_view_start ();
+}
+
+
+
+void TCORERCT::cursor_down ()
+{
+	cursor_param_ix++;
+	if (cursor_param_ix >= EPRMIX_ENDENUM) cursor_param_ix = EPRMIX_ENDENUM - 1;
+	//update_view_start ();
+}
+
+
+
+void TCORERCT::set_edit_mode (bool v)
+{
+	f_is_edit_param_mode = v;
+}
+
+
+
+void TCORERCT::draw_item_param (long prm_ix, long y_k, bool is_curs, bool is_edit)
+{
+	S_MVPARAM_HDR_T *prm = params->get_param_tag (prm_ix);
+	if (prm) {
+		MAV_PARAM_TYPE pt = prm->type;
+		S_MDAT_T *ldt = params->get_value (prm_ix);
+		if (ldt)
+			{
+			uint8_t rawstr[128];
+			TSTMSTRING str(rawstr, sizeof(rawstr));
+			str += ' ';
+			str.Add_String (prm->param_id, sizeof(prm->param_id));
+			str += " : ";
+			if (pt == MAV_PARAM_TYPE_UINT32)
+				{
+				str += (unsigned long)ldt->u.u32;
+				}
+			else
+				{
+				str.Insert_Float ((float)ldt->u.f, 2);
+				}
+			str += ' ';
+			uint32_t w = canva->GetCanvaWidth ();
+			uint32_t wstr = canva->GetDrawStringWidth (str.c_str());
+			if (wstr < w)
+				{
+				uint32_t ofs_x = (w - wstr)/2;
+				canva->lastX = ofs_x;
+				canva->lastY = y_k;
+					canva->SetInverseMode (is_curs);
+
+				canva->PrintString (str.c_str());
+				}
+			}
+		}
+}
+
+
+
+void TCORERCT::draw_param_list (long y_start, long height)
+{
+	canva->SetFonts ((MaxFontMicro*)&resname_ptmono8_f);
+	canva->Cls (0);
+	update_view_start ();
+	long prm_ix = cursor_param_ix;
+	long start_view_pos = view_param_start_ix;
+	long y_cords = y_start;
+	long cnt_line = gui_dislp_item_cnt ();
+	long hght_end = y_cords + height;
+	while (start_view_pos < EPRMIX_ENDENUM && cnt_line)
+		{
+		draw_item_param (start_view_pos, y_cords, (start_view_pos == cursor_param_ix)?true:false, f_is_edit_param_mode);
+		y_cords += gui_item_param_height ();
+		if (y_cords >= hght_end) break;
+		cnt_line--;
+		start_view_pos++;
+		}
+	f_lcd_needupdate = true;
+}
+
+
+
+void TCORERCT::draw_main_page_task (const S_PGMESSAGE_T &msg)
+{
+	//canva->SetFonts ((MaxFontMicro*)&resname_ptmono8_f);
+	if (msg.msg == EJSTMSG_CLICK)
+		{
+		switch (msg.key)
+			{
+			case EKEYSID_UP:
+				{
+				cursor_up ();
+				break;
+				}
+			case EKEYSID_DOWN:
+				{
+				cursor_down ();
+				break;
+				}
+			}
+		}
+		
+	uint32_t pushtime = keys->get_pushtime_cur (EKEYSID_OK);
+	if (pushtime > 2000)
+		{
+		edit_param_ix = cursor_param_ix;
+		set_page (EPAGE_PARAM_EDIT);
+		keys->block_next_msg (EKEYSID_OK);
+		}
+	else
+		{
+		canva->SetInverseMode (0);
+		draw_param_list (0, canva->GetCanvaHeight ());
+		}
+}
+
+
+
+void TCORERCT::draw_paramedit_page (long prm_ix)
+{
+}
+
+
+
+void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
+{
+	if (msg.msg == EJSTMSG_CLICK)
+		{
+		switch (msg.key)
+			{
+			case EKEYSID_UP:
+				{
+				break;
+				}
+			case EKEYSID_DOWN:
+				{
+				break;
+				}
+			}
+		}
+	uint32_t pushtime = keys->get_pushtime_cur (EKEYSID_OK);
+	if (pushtime > 2000)
+		{
+		set_page (EPAGE_MAIN);
+		keys->block_next_msg (EKEYSID_OK);
+		}
+	else
+		{
+		canva->SetInverseMode (0);
+		draw_paramedit_page (edit_param_ix);
+		draw_param_list (0, canva->GetCanvaHeight ());
+		}
+}
 
 
 
 void TCORERCT::Task ()
 {
 	S_PGMESSAGE_T msg;
-	msg.msg= keys->get_message (msg.key);
+	long key;
+	msg.msg = keys->get_message (key);
+	msg.key = (EKEYSID)key;
 	
 	switch (cur_page)
 		{
@@ -128,6 +338,11 @@ void TCORERCT::Task ()
 		case EPAGE_MAIN:
 			{
 			draw_main_page_task (msg);
+			break;
+			}
+		case EPAGE_PARAM_EDIT:
+			{
+			draw_edit_param_task (msg);
 			break;
 			}
 		}

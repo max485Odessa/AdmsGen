@@ -91,7 +91,7 @@ public:
 
         bool ToLong (long &ul_dat);
         bool ToULong (uint32_t &ul_dat);
-        bool ToFloat (float &ul_dat);
+        bool ToFloat (float &f_dat);
         bool HexToUint64 (uint64_t &ul_dat);
 
         bool getcomastring_indx (TSTMSTRING *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField);

@@ -66,7 +66,7 @@ int main ()
 {
 	static uint8_t updline_cnt = 0;
 	SystemClockHSE_Config ();
-	keys = new TEASYKEYS (const_cast<S_GPIOPIN*>(rawpins_keys));
+	keys = new TEASYKEYS (const_cast<S_GPIOPIN*>(rawpins_keys), EJSTCPINS_ENDENUM);
 	// pinsi2c_a
 	busi2c = new TI2CIFACE (pinsi2c_a, 50);
 	memi2c = new TM24C16 (busi2c, 0);

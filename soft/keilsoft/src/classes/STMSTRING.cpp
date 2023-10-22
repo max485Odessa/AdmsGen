@@ -46,7 +46,7 @@ void TSTMSTRING::set_context (void *lDRam, unsigned long size)
 if (size && lDRam)
     {
     BuferSize = size;
-    size_str = size;
+    size_str = lenstr ((char*)lDRam);
     lpStrRam = (char*)lDRam;
     }
 }
@@ -282,9 +282,13 @@ AddStringP ((char*)lpsrc);
 
 void TSTMSTRING::Add_String (const char *lpsrc, unsigned long sz)
 {
+	char d;
 while (sz)
     {
-    InsChar (*lpsrc++);
+		d = *lpsrc;
+		if (!d) break;
+    InsChar (d);
+		lpsrc++;
     sz--;
     }
 }

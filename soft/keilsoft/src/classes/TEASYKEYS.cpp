@@ -3,13 +3,13 @@
 
 
 
-TEASYKEYS::TEASYKEYS (S_GPIOPIN *p) : c_pins_cnt (EJSTCPINS_ENDENUM)
+TEASYKEYS::TEASYKEYS (S_GPIOPIN *p, uint8_t k_cnt) : c_pins_cnt (k_cnt)
 {
 	uint8_t ix = 0;
 	pins = new S_KEYSETS_T[c_pins_cnt];
 	last_pushed_mask = 0;
 
-	while (ix < EJSTCPINS_ENDENUM) 
+	while (ix < c_pins_cnt) 
 		{
 		pins[ix].keypin = p[ix];
 		_pin_low_init_in_pull (&pins[ix].keypin, 1, true);
@@ -42,7 +42,7 @@ void TEASYKEYS::update_push_state_all ()
 {
 	uint8_t ix = 0;
 	bool stt;
-	while (ix < EJSTCPINS_ENDENUM)  
+	while (ix < c_pins_cnt)  
 		{
 		stt = update_push_state (pins[ix]);
 		if (stt)
@@ -69,34 +69,34 @@ bool TEASYKEYS::update_push_state (S_KEYSETS_T &ps)
 
 
 
-uint32_t TEASYKEYS::get_pushtime_cur (EJSTCPINS p)
+uint32_t TEASYKEYS::get_pushtime_cur (long p)
 {
 	uint32_t rv = 0;
-	if (p < EJSTCPINS_ENDENUM) rv = pins[p].push_time;
+	if (p < c_pins_cnt) rv = pins[p].push_time;
 	return rv;
 }
 
 
 
-uint32_t TEASYKEYS::get_pushtime_last (EJSTCPINS p)
+uint32_t TEASYKEYS::get_pushtime_last (long p)
 {
 	uint32_t rv = 0;
-	if (p < EJSTCPINS_ENDENUM) rv = pins[p].last_push_time;
+	if (p < c_pins_cnt) rv = pins[p].last_push_time;
 	return rv;
 }
 
 
 
-EJSTMSG TEASYKEYS::get_message (EJSTCPINS &kn)
+EJSTMSG TEASYKEYS::get_message (long &kn)
 {
 	EJSTMSG rv = EJSTMSG_NONE;
-	uint8_t cntkeys = EJSTCPINS_ENDENUM;
+	uint8_t cntkeys = c_pins_cnt;
 	while (cntkeys)
 		{
-		if (gmsg_ix >= EJSTCPINS_ENDENUM) gmsg_ix = 0;
+		if (gmsg_ix >= c_pins_cnt) gmsg_ix = 0;
 		if (pins[gmsg_ix].messg != EJSTMSG_NONE)
 			{
-			kn = (EJSTCPINS)gmsg_ix;
+			kn = gmsg_ix;
 			rv = pins[gmsg_ix].messg;
 			pins[gmsg_ix].messg = EJSTMSG_NONE;
 			break;
@@ -109,16 +109,16 @@ EJSTMSG TEASYKEYS::get_message (EJSTCPINS &kn)
 
 
 
-void TEASYKEYS::block_next_msg (EJSTCPINS p)
+void TEASYKEYS::block_next_msg (long p)
 {
-	if (p < EJSTCPINS_ENDENUM) pins[p].f_block_next_msg = true;
+	if (p < c_pins_cnt) pins[p].f_block_next_msg = true;
 }
 
 
 
-void TEASYKEYS::block_time (EJSTCPINS p, uint32_t tbl)
+void TEASYKEYS::block_time (long p, uint32_t tbl)
 {
-	if (p < EJSTCPINS_ENDENUM) pins[p].block_time = tbl;
+	if (p < c_pins_cnt) pins[p].block_time = tbl;
 }
 
 
@@ -132,7 +132,7 @@ void TEASYKEYS::Task ()
 		uint8_t ix = 0;
 		dlt = c_dlt;
 		update_push_state_all ();
-		while (ix < EJSTCPINS_ENDENUM)
+		while (ix < c_pins_cnt)
 			{
 			subval_u32 (pins[ix].block_time, c_dlt);
 			if (pins[ix].pushstate_cur != pins[ix].pushstate_prev)
