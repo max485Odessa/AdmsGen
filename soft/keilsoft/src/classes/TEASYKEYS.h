@@ -48,6 +48,7 @@ class TEASYKEYS: public TFFC {
 	
 		void block_next_msg (long p);
 		void block_time (long p, uint32_t tbl);
+		void push_time_clear (long p);
 	
 		uint32_t get_pushed_mask ();
 		uint32_t get_pushtime_cur (long p);

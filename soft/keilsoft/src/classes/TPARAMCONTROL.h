@@ -1,5 +1,5 @@
-#ifndef _H_MAVPARAMS_H_
-#define _H_MAVPARAMS_H_
+#ifndef _H_MAVPARAMS_PARAMCONTROL_H_
+#define _H_MAVPARAMS_PARAMCONTROL_H_
 
 
 #include <stdint.h>
@@ -77,6 +77,7 @@ typedef struct {
 	S_MDAT_T min;
 	S_MDAT_T max;
 	S_MDAT_T def_value;
+	S_MDAT_T step_val;
 } S_BASETAGPARAM_T;
 
 
@@ -126,6 +127,9 @@ class TPARAMCONTRL {
 		uint32_t param_internal_cnt ();
 		uint32_t param_external_cnt ();
 		uint32_t param_full_cnt ();
+	
+		void save ();
+		void load ();
 		bool is_changed ();
 };
 

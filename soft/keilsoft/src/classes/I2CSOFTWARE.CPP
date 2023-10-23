@@ -1,5 +1,5 @@
 #include "I2CSOFTWARE.H"
-//#include "rutine.h"
+
 
 
 TI2CIFACE::TI2CIFACE (const S_GPIOPIN *p, uint8_t w) : c_i2c_wait (w)

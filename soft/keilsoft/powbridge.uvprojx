@@ -409,9 +409,9 @@
               <FilePath>.\src\classes\TCORE.cpp</FilePath>
             </File>
             <File>
-              <FileName>TMAVPARAMS.cpp</FileName>
+              <FileName>TPARAMCONTROL.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\src\classes\TMAVPARAMS.cpp</FilePath>
+              <FilePath>.\src\classes\TPARAMCONTROL.cpp</FilePath>
             </File>
           </Files>
         </Group>

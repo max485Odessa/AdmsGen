@@ -301,8 +301,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\src\classes\TMAVPARAMS.cpp</PathWithFileName>
-      <FilenameWithoutPath>TMAVPARAMS.cpp</FilenameWithoutPath>
+      <PathWithFileName>.\src\classes\TPARAMCONTROL.cpp</PathWithFileName>
+      <FilenameWithoutPath>TPARAMCONTROL.cpp</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

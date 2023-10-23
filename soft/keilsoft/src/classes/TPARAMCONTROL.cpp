@@ -1,4 +1,4 @@
-#include "TMAVPARAMS.h"
+#include "TPARAMCONTROL.h"
 
 
 
@@ -7,6 +7,20 @@ TPARAMCONTRL::TPARAMCONTRL (TEEPROMIF *m, uint32_t start_m, uint32_t size_m, S_M
 	param_internal = lst;
 	param_int_count = cp;
 	flashmem = m;
+}
+
+
+
+void TPARAMCONTRL::save ()
+{
+	save_internal_params ();
+}
+
+
+
+void TPARAMCONTRL::load ()
+{
+	if (!load_internal_params ()) sets_internal_params_to_default ();
 }
 
 

@@ -52,13 +52,8 @@ static void frendly_task ()
 {
 	SYSBIOS::EXECUTE_PERIODIC_SYS ();
 	TFCC_MANAGER::Execute_Tasks ();
-	
 }
 
-
-
-//static uint8_t testbufwr[512];
-//static uint8_t testbufrd[512];
 
 
 
@@ -71,17 +66,13 @@ int main ()
 	busi2c = new TI2CIFACE (pinsi2c_a, 50);
 	memi2c = new TM24C16 (busi2c, 0);
 	
-	
-	//memi2c->write (0, testbufwr, 512); 
-	//memi2c->read (0, testbufrd, 512);
-
 	canva = new TLCDCANVABW ();
 	canva->Init ();
 	lcd = new TST7565RSPI (const_cast<S_GPIOPIN*>(rawpins_lcd));
 	lcd->LCD_init ();
 	rectifier = new TCONTRECT (&pinphase_in_a, &pinphase_out_a, ESYSTIM_TIM2, 1000000, 10);
 	
-	canva->DrawCircle (20, 20, 10);
+	//canva->DrawCircle (20, 20, 10);
 	
 	core = new TCORERCT (rectifier, canva, keys, memi2c);
 	updline_cnt = C_LCD_PAGE_AMOUNT;

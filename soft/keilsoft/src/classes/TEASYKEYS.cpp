@@ -116,6 +116,13 @@ void TEASYKEYS::block_next_msg (long p)
 
 
 
+void TEASYKEYS::push_time_clear (long p)
+{
+	if (p < c_pins_cnt) pins[p].push_time = 0;
+}
+
+
+
 void TEASYKEYS::block_time (long p, uint32_t tbl)
 {
 	if (p < c_pins_cnt) pins[p].block_time = tbl;
