@@ -28,7 +28,8 @@ TCORERCT::TCORERCT (TCONTRECT *rectifier, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF 
 	keys = k;
 	f_lcd_needupdate = true;
 	str_tmp.set_space (strtemporarymem, sizeof(strtemporarymem)-1);
-	set_page (EPAGE_MAIN);
+	set_page (EPAGE_PARAM_LIST);
+	
 }
 
 
@@ -53,6 +54,7 @@ void TCORERCT::set_page (EPAGE p)
 			cur_page = p;
 			}
 		}
+	f_is_edit_param_mode = false;
 }
 
 
@@ -175,12 +177,18 @@ void TCORERCT::draw_param_list (long y_start, long height)
 
 
 
-void TCORERCT::draw_main_page_task (const S_PGMESSAGE_T &msg)
+void TCORERCT::draw_list_param_task (const S_PGMESSAGE_T &msg)
 {
 	if (msg.msg == EJSTMSG_CLICK)
 		{
 		switch (msg.key)
 			{
+			case EKEYSID_OK:
+				{
+				edit_param_ix = cursor_param_ix;
+				set_page (EPAGE_PARAM_EDIT);
+				break;
+				}
 			case EKEYSID_UP:
 				{
 				cursor_up ();
@@ -193,20 +201,22 @@ void TCORERCT::draw_main_page_task (const S_PGMESSAGE_T &msg)
 				}
 			}
 		}
-		
-	uint32_t pushtime = keys->get_pushtime_cur (EKEYSID_OK);
-	if (pushtime > 2000)
-		{
-		edit_param_ix = cursor_param_ix;
-		set_page (EPAGE_PARAM_EDIT);
-		keys->block_next_msg (EKEYSID_OK);
-		keys->push_time_clear (EKEYSID_OK);
-		}
 	else
 		{
-		canva->SetInverseMode (0);
-		draw_param_list (0, canva->GetCanvaHeight ());
+		uint32_t pushtime = keys->get_pushtime_cur (EKEYSID_OK);
+		if (pushtime > 2000)
+			{
+			set_page (EPAGE_MAIN);
+			keys->block_next_msg (EKEYSID_OK);
+			keys->push_time_clear (EKEYSID_OK);
+			}
+		else
+			{
+			canva->SetInverseMode (0);
+			draw_param_list (0, canva->GetCanvaHeight ());
+			}
 		}
+		
 }
 
 
@@ -382,7 +392,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 		{
 			
 		pushtime = keys->get_pushtime_cur (EKEYSID_UP);
-		if (pushtime)
+		if (pushtime && f_is_edit_param_mode)
 			{
 			param_change_updown (edit_param_ix, true);
 			key_rep_timer.set (calc_repeate_frompushtime (pushtime));
@@ -390,7 +400,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 			f_lcd_needupdate = true;
 			}
 		pushtime = keys->get_pushtime_cur (EKEYSID_DOWN);
-		if (pushtime)
+		if (pushtime && f_is_edit_param_mode)
 			{
 			param_change_updown (edit_param_ix, false);
 			key_rep_timer.set (calc_repeate_frompushtime (pushtime));
@@ -403,7 +413,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 	pushtime = keys->get_pushtime_cur (EKEYSID_OK);
 	if (pushtime > 2000)
 		{
-		set_page (EPAGE_MAIN);
+		set_page (EPAGE_PARAM_LIST);
 		keys->block_next_msg (EKEYSID_OK);
 		keys->push_time_clear (EKEYSID_OK);
 		params->save ();
@@ -412,6 +422,36 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 		{
 		canva->SetInverseMode (0);
 		draw_paramedit_page (edit_param_ix);
+		f_lcd_needupdate = true;
+		}
+}
+
+
+
+void TCORERCT::draw_main_screens ()
+{
+	
+}
+
+
+
+
+void TCORERCT::draw_main_page_task (const S_PGMESSAGE_T &msg)
+{
+
+	uint32_t pushtime;
+
+	pushtime = keys->get_pushtime_cur (EKEYSID_OK);
+	if (pushtime > 2000)
+		{
+		set_page (EPAGE_PARAM_LIST);
+		keys->block_next_msg (EKEYSID_OK);
+		keys->push_time_clear (EKEYSID_OK);
+		}
+	else
+		{
+		canva->SetInverseMode (0);
+		draw_main_screens ();
 		f_lcd_needupdate = true;
 		}
 }
@@ -429,6 +469,11 @@ void TCORERCT::Task ()
 		{
 		case EPAGE_NONE:
 			{
+			break;
+			}
+		case EPAGE_PARAM_LIST:
+			{
+			draw_list_param_task (msg);
 			break;
 			}
 		case EPAGE_MAIN:

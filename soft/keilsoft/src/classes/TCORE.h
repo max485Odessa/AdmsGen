@@ -30,7 +30,7 @@ typedef struct {
 	EJSTMSG msg;
 } S_PGMESSAGE_T;
 
-enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_ENDENUM};
+enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_PARAM_LIST, EPAGE_ENDENUM};
 
 class TCORERCT: public TFFC {
 		uint8_t gui_item_param_height ();
@@ -64,6 +64,7 @@ class TCORERCT: public TFFC {
 	
 		void draw_main_page_task (const S_PGMESSAGE_T &msg);
 		void draw_edit_param_task (const S_PGMESSAGE_T &msg);
+		void draw_list_param_task (const S_PGMESSAGE_T &msg);
 
 		uint32_t draw_str_center (long ys, TSTMSTRING &s, bool inv);
 		void add_dig_to_str (TSTMSTRING &s, MAV_PARAM_TYPE tp, const S_MDAT_T &d, uint8_t dg);
@@ -79,6 +80,7 @@ class TCORERCT: public TFFC {
 		bool f_settings_changed;
 		void draw_param_list (long y_start, long height);
 		void draw_paramedit_page (long prm_ix);
+		void draw_main_screens ();
 		
 	public:
 		TCORERCT (TCONTRECT *rectifier, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m);
