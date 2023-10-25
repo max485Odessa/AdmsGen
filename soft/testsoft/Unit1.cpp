@@ -284,14 +284,25 @@ if (gui_to_data (params))
     float full_cur_stop = voltage_load_stop / full_resistance;
     float volt_to_load_start = params.resistance_load * full_cur_start;
     float volt_to_load_stop = params.resistance_load * full_cur_stop;
+    float volt_to_coil_start = params.resistance_coil * full_cur_start;
+    float volt_to_coil_stop = params.resistance_coil * full_cur_stop;
 
     float time_load_comutation = time_output (params.freq, params.start_angle, params.stop_angle) * 2;
 
     float joule_to_load_start = time_load_comutation * (volt_to_load_start * full_cur_start);
     float joule_to_load_stop = time_load_comutation * (volt_to_load_stop * full_cur_stop);
 
-    float wats_start = joule_to_load_start * params.freq;
-    float wats_stop = joule_to_load_stop * params.freq;
+    float joule_fall_coil_start = time_load_comutation * (volt_to_coil_start * full_cur_start);
+    float joule_fall_coil_stop = time_load_comutation * (volt_to_coil_stop * full_cur_stop);
+
+    float wats_load_start = joule_to_load_start * params.freq;
+    float wats_load_stop = joule_to_load_stop * params.freq;
+    float wats_load_midle = (wats_load_stop + wats_load_start)/2;
+
+    float wats_coil_start = joule_fall_coil_start * params.freq;
+    float wats_coil_stop = joule_fall_coil_stop * params.freq;
+    float wats_coil_midle = (wats_coil_stop + wats_coil_start)/2;
+
     // мощность в нагрузку
 
     str = "Стартовый угол коммутации: V=";
@@ -299,7 +310,7 @@ if (gui_to_data (params))
     str += ", A=";
     str += FloatToStr_V (full_cur_start, 1).c_str();//
     str += ", W=";
-    str += FloatToStr_V (wats_start, 1).c_str();
+    str += FloatToStr_V (wats_load_start, 1).c_str();
     str += "\n\r";
     Memo1->Lines->Add (str);
 
@@ -308,18 +319,32 @@ if (gui_to_data (params))
     str += ", A=";
     str += FloatToStr_V (full_cur_start, 1).c_str();//
     str += ", W=";
-    str += FloatToStr_V (wats_stop, 1).c_str();
+    str += FloatToStr_V (wats_load_stop, 1).c_str();
     str += "\n\r";
     Memo1->Lines->Add (str);
 
-    str = "Усредненные параметры за период коммутации: V=";
+    str = "Усредненные параметры за период коммутации на нагрузке: V=";
     str += FloatToStr_V ((volt_to_load_stop + volt_to_load_start)/2, 1).c_str();
     str += ", A=";
     str += FloatToStr_V ((full_cur_stop + full_cur_start)/2, 1).c_str();//
-    str += ", W=";
-    str += FloatToStr_V ((wats_start + wats_stop)/2, 1).c_str();
+    str += ", Wcoil=";
+    str += FloatToStr_V (wats_coil_midle, 1).c_str();
+    str += ", Wload=";
+    str += FloatToStr_V (wats_load_midle, 1).c_str();
+    str += ", Wfull=";
+    str += FloatToStr_V (wats_load_midle + wats_coil_midle, 1).c_str();
     str += "\n\r";
     Memo1->Lines->Add (str);
+
+
+    float joule_in_coil = (full_cur_stop * full_cur_stop * params.inductance) / 2;
+    float wats_in_coil = params.freq * joule_in_coil;
+
+    str = "ОЭДС ват: W = ";
+    str += FloatToStr_V (wats_in_coil, 1).c_str();
+    str += "\n\r";
+    Memo1->Lines->Add (str);
+
     }
 }
 //---------------------------------------------------------------------------

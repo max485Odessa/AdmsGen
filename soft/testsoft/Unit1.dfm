@@ -133,6 +133,8 @@ object Form1: TForm1
     Top = 72
     Width = 121
     Height = 21
+    Color = clMenu
+    Enabled = False
     TabOrder = 7
     OnChange = Edit8Change
   end
