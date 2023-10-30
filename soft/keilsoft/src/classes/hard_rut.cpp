@@ -4,6 +4,125 @@
 
 enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
 static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
+static bool cur_clock_state_tim[ESYSTIM_ENDENUM] = {0,0,0,0,0,0,0,0,0,0,0,0};
+static const TIM_TypeDef *cur_clock_port_tim[ESYSTIM_ENDENUM] = {TIM1,TIM2,TIM3,TIM4,TIM5,0,0,0,TIM9,TIM10,TIM11,0};
+
+
+
+TIM_TypeDef *hard_get_tim (ESYSTIM tn)
+{
+	TIM_TypeDef *rv = 0;
+	if (tn < ESYSTIM_ENDENUM) rv = const_cast<TIM_TypeDef*>(cur_clock_port_tim[tn]);
+	return rv;
+}
+
+
+void hard_tim_clock_enable (ESYSTIM tn)
+{
+	bool f_sets = false;
+	if (cur_clock_state_tim[tn]) return;
+	do	{
+			#ifdef TIM1
+			if (tn == ESYSTIM_TIM1) {
+				__HAL_RCC_TIM1_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM2
+			if (tn == ESYSTIM_TIM2) {
+				__HAL_RCC_TIM2_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM3
+			if (tn == ESYSTIM_TIM3) {
+				__HAL_RCC_TIM3_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM4
+			if (tn == ESYSTIM_TIM4) {
+				__HAL_RCC_TIM4_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+				
+			#ifdef TIM5
+			if (tn == ESYSTIM_TIM5) {
+				__HAL_RCC_TIM5_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM6
+			if (tn == ESYSTIM_TIM6) {
+				__HAL_RCC_TIM6_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM7
+			if (tn == ESYSTIM_TIM7) {
+				__HAL_RCC_TIM7_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM8
+			if (tn == ESYSTIM_TIM8) {
+				__HAL_RCC_TIM8_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+			
+			#ifdef TIM9
+			if (tn == ESYSTIM_TIM9) {
+				__HAL_RCC_TIM9_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM10
+			if (tn == ESYSTIM_TIM10) {
+				__HAL_RCC_TIM10_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM11
+			if (tn == ESYSTIM_TIM11) {
+				__HAL_RCC_TIM11_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM12
+			if (tn == ESYSTIM_TIM12) {
+				__HAL_RCC_TIM12_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+			} while (false);
+	
+	if (f_sets) cur_clock_state_tim[tn] = true;
+}
+
 
 
 void hard_gpio_clock_enable (GPIO_TypeDef *port)
@@ -172,7 +291,7 @@ void _pin_low_init_out_pp (S_GPIOPIN *lp_pin, unsigned char cnt)
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;//GPIO_SPEED_FREQ_LOW;//GPIO_SPEED_FREQ_VERY_HIGH;//GPIO_SPEED_FREQ_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
 		GPIO_InitStructure.Pull = GPIO_NOPULL;
 		GPIO_InitStructure.Alternate = 0;
@@ -267,7 +386,7 @@ void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md)
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;//GPIO_SPEED_FREQ_LOW;//GPIO_SPEED_FREQ_VERY_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
 		GPIO_InitStructure.Mode = modintarr[md];
 		GPIO_InitStructure.Pull = GPIO_NOPULL;//GPIO_NOPULL;
 		GPIO_InitStructure.Alternate = 0;

@@ -2,11 +2,11 @@
 
 
 
-static const uint8_t isrnumbarr[ESYSTIM_ENDENUM] = {TIM2_IRQn, TIM5_IRQn};
-static const TIM_TypeDef *artims[ESYSTIM_ENDENUM] = {TIM2, TIM5};
-static ITIM_ISR *isr_this[ESYSTIM_ENDENUM] = {0,0};
+static const uint8_t isrnumbarr[ESYSTIM_ENDENUM] = {TIM1_CC_IRQn, TIM2_IRQn, TIM3_IRQn, TIM4_IRQn, TIM5_IRQn, 0, 0, 0, 0, 0, 0, 0};
+//static const TIM_TypeDef *artims[ESYSTIM_ENDENUM] = {TIM2, TIM5};
+static ITIM_ISR *isr_this[ESYSTIM_ENDENUM] = {0,0,0,0,0,0,0,0,0,0,0,0};
 static const uint32_t chanarr[4] = {TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3, TIM_CHANNEL_4};
-
+static const uint32_t ocmode[2] = {TIM_OCMODE_PWM1, TIM_OCMODE_PWM2};
 
 
 #ifdef __cplusplus
@@ -45,7 +45,7 @@ void TIM5_IRQHandler ()
 
 ITIM_ISR::ITIM_ISR (ESYSTIM t)
 {
-	TimHandle.Instance = get_tim (t);
+	TimHandle.Instance = hard_get_tim (t);
 	isr_this[t] = this;
 	tim_ix = t;
 	uint8_t ix = 0;
@@ -76,27 +76,27 @@ uint32_t ITIM_ISR::get_timer_counter ()
 // isr context executed
 void ITIM_ISR::isr_tim ()
 {
-	if(__HAL_TIM_GET_IT_SOURCE (&TimHandle, TIM_IT_CC1) !=RESET)
+	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC1) !=RESET)
     {
 			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM1);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC1);
 		}
-	if(__HAL_TIM_GET_IT_SOURCE (&TimHandle, TIM_IT_CC2) !=RESET)
+	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC2) !=RESET)
     {
 			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM2);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC2);
 		}
-	if(__HAL_TIM_GET_IT_SOURCE (&TimHandle, TIM_IT_CC3) !=RESET)
+	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC3) !=RESET)
     {
 			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM3);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC3);
 		}
-	if(__HAL_TIM_GET_IT_SOURCE (&TimHandle, TIM_IT_CC4) !=RESET)
+	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC4) !=RESET)
     {
 			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM4);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC4);
 		}
-	if(__HAL_TIM_GET_IT_SOURCE (&TimHandle, TIM_IT_UPDATE) !=RESET)
+	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_UPDATE) !=RESET)
     {
 			tim_comp_cb_isr (tim_ix, EPWMCHNL_UPDATE);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_UPDATE);
@@ -105,33 +105,19 @@ void ITIM_ISR::isr_tim ()
 
 
 
-TIM_TypeDef *ITIM_ISR::get_tim (ESYSTIM t)
-{
-	TIM_TypeDef *rv = 0;
-	if (t < ESYSTIM_ENDENUM) rv = const_cast<TIM_TypeDef*>(artims[t]);
-	return rv;
-}
-
-
 
 void ITIM_ISR::timer_init (uint32_t period, uint32_t hz)
 {
 TIM_OC_InitTypeDef   sConfig;
 uint32_t uwPrescalerValue = (uint32_t) ((SystemCoreClock / hz) - 1);
-
+hard_tim_clock_enable (tim_ix);
   
-  /* Initialize TIMx peripheral as follow:
-       + Period = 10000 - 1
-       + Prescaler = ((SystemCoreClock/2)/hz) - 1
-       + ClockDivision = 0
-       + Counter direction = Up
-  */
   TimHandle.Init.Period = period - 1;
   TimHandle.Init.Prescaler = uwPrescalerValue;
   TimHandle.Init.ClockDivision = 0;
   TimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
-  HAL_TIM_Base_Init(&TimHandle);
-	HAL_TIM_Base_Start (&TimHandle);
+	HAL_TIM_OC_Init (&TimHandle);
+	//HAL_TIM_Base_Start (&TimHandle);
 }
 
 
@@ -153,7 +139,11 @@ void ITIM_ISR::enable_timer_isr (bool st)
 
 void ITIM_ISR::set_timer_oc_value (EPWMCHNL c, uint32_t v)
 {
-	if (c < EPWMCHNL_ENDENUM) a_pwmvalue[c] = v;
+	if (c < EPWMCHNL_ENDENUM) 
+		{
+		a_pwmvalue[c] = v;
+		__HAL_TIM_SET_COMPARE (&TimHandle, chanarr[c], v);
+		}
 }
 
 
@@ -166,7 +156,8 @@ void ITIM_ISR::enable_timer_oc (EPWMCHNL c, bool state)
 
 		if (state)
 			{
-			sConfig.OCMode  = TIM_OCMODE_ACTIVE;
+
+			sConfig.OCMode  = TIM_OCMODE_ACTIVE;//TIM_OCMODE_FORCED_ACTIVE;//TIM_OCMODE_ACTIVE;//ocmode[c]; //TIM_OCMODE_PWM1;//TIM_OCMODE_ACTIVE;
 			sConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
 
 			sConfig.Pulse = a_pwmvalue[c];  

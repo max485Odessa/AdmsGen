@@ -8,7 +8,7 @@
 
 
 
-enum ESYSTIM {ESYSTIM_TIM2 = 0, ESYSTIM_TIM5 = 1, ESYSTIM_ENDENUM = 2};
+//enum ESYSTIM {ESYSTIM_TIM2 = 0, ESYSTIM_TIM5 = 1, ESYSTIM_ENDENUM = 2};
 enum EPWMCHNL {EPWMCHNL_PWM1 = 0, EPWMCHNL_PWM2 = 1, EPWMCHNL_PWM3 = 2, EPWMCHNL_PWM4 = 3, EPWMCHNL_UPDATE = 4, EPWMCHNL_ENDENUM = 5};
 #define C_RECTIFIRE_TIM ESYSTIM_TIM2
 
@@ -31,7 +31,7 @@ class ITIM_ISR {
 		void enable_timer_oc (EPWMCHNL c, bool state);
 		void set_timer_oc_value (EPWMCHNL c, uint32_t v);
 		
-		static TIM_TypeDef *get_tim (ESYSTIM t);
+		
 		ITIM_ISR (ESYSTIM t);
 	
 	public:

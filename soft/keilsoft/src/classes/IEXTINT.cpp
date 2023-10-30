@@ -84,9 +84,9 @@ void EXTI15_10_IRQHandler ()
 
 void IEXTINT_ISR::gpio_isr (uint16_t pinn)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT (pinn);
 	GPIO_PinState stt = HAL_GPIO_ReadPin(c_pin_in->port, c_pin_in->pin);
 	isr_gpio_cb_int (c_isr_nmbr, stt);
+	__HAL_GPIO_EXTI_CLEAR_IT (pinn);
 }
 
 
@@ -131,6 +131,7 @@ long IEXTINT_ISR::gpio_pin_ix_from_mask (uint16_t msk)
 			rv = ix;
 			break;
 			}
+		msk >>= 1;
 		ix++;
 		}
 	return rv;

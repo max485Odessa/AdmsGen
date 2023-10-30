@@ -12,7 +12,7 @@
 
 
 
-enum ERPMSW {ERPMSW_NONE = 0, ERPMSW_FRONTE_0_360_ANGLE, ERPMSW_FALL_180_ANGLE, ERPMSW_ENDENUM};
+enum ERPMSW {ERPMSW_NONE = 0, ERPMSW_FRONTE_0_360_ANGLE,  ERPMSW_ENDENUM};		// ERPMSW_FALL_180_ANGLE, ERPMSW_RESYNC,
 
 
 
@@ -31,12 +31,16 @@ class TCONTRECT: public ITIM_ISR, public IEXTINT_ISR, public TFFC, public SYSBIO
 		uint32_t speed_stop_sys;			// for 180 angle tick period
 		bool f_speed_control_enabled;
 	
-		uint32_t tick_phase_rectifier_sys_on;			// for 180 angle tick period
-		uint32_t tick_phase_rectifier_sys_off;			// for 180 angle tick period
-		bool f_phase_value_new_sys;
-		uint32_t tick_phase_rectifier_isr_on;				// for 180 angle tick period
-		uint32_t tick_phase_rectifier_isr_off;			// for 180 angle tick period
-		bool f_phase_value_new_isr;
+		uint32_t tick_phase_rectifier_sys_on_a;			// for 180 angle tick period
+		uint32_t tick_phase_rectifier_sys_off_a;			// for 180 angle tick period
+		uint32_t tick_phase_rectifier_sys_on_b;			// for 180 angle tick period
+		uint32_t tick_phase_rectifier_sys_off_b;			// for 180 angle tick period
+		//bool f_phase_value_new_sys;
+		uint32_t tick_phase_rectifier_isr_on_a;				// for 180 angle tick period
+		uint32_t tick_phase_rectifier_isr_off_a;			// for 180 angle tick period
+		uint32_t tick_phase_rectifier_isr_on_b;				// for 180 angle tick period
+		uint32_t tick_phase_rectifier_isr_off_b;			// for 180 angle tick period
+		//bool f_phase_value_new_isr;
 		
 		bool f_phase_control_active;
 	
@@ -54,12 +58,14 @@ class TCONTRECT: public ITIM_ISR, public IEXTINT_ISR, public TFFC, public SYSBIO
 		S_GPIOPIN *c_pin_out;
 		
 		void gpio_rectifier_enable (bool val);
+		//bool f_is_new_control_angle;
 	
 		virtual void tim_comp_cb_isr (ESYSTIM t, EPWMCHNL ch) override;
 		virtual void isr_gpio_cb_int (uint8_t isr_n, bool pinstate) override;
 		const uint8_t c_magnet_cnt;
 		virtual void Task () override;
 	
+		
 	protected:
 	
 		bool f_rectifier_system_enabled;
@@ -71,7 +77,7 @@ class TCONTRECT: public ITIM_ISR, public IEXTINT_ISR, public TFFC, public SYSBIO
 		void control_rectifier (float strt_angl, float stp_angl);
 		void rectifier_enabled (bool val);
 		float get_angle_now ();
-		
+		float get_freq ();
 };
 
 

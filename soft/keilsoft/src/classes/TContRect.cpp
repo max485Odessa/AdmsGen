@@ -1,14 +1,18 @@
 #include "TcontRect.h"
+#include "TGlobalISR.h"
 
 
-
-TCONTRECT::TCONTRECT (S_GPIOPIN *pnout, S_GPIOPIN *pnin, ESYSTIM tt, uint32_t freq_hz, uint8_t cmagcnt) : c_magnet_cnt (cmagcnt), IEXTINT_ISR(pnin, EGPINTMOD_RISING_FALLING), ITIM_ISR (tt)
+TCONTRECT::TCONTRECT (S_GPIOPIN *pnout, S_GPIOPIN *pnin, ESYSTIM tt, uint32_t freq_hz, uint8_t cmagcnt) : c_magnet_cnt (cmagcnt), IEXTINT_ISR(pnin, EGPINTMOD_RISING), ITIM_ISR (tt)
 {
+	//f_is_new_control_angle = false;
 	timer_init (0xFFFFFFFF, freq_hz);
 	enable_timer_oc (EPWMCHNL_PWM1, true);
 	enable_timer_oc (EPWMCHNL_PWM2, true);
+	enable_timer_oc (EPWMCHNL_PWM3, true);
+	enable_timer_oc (EPWMCHNL_PWM4, true);
 	
 	c_pin_out = pnout;
+	_pin_low_init_out_pp (c_pin_out, 1);
 	timer_timeout_ext_isr.set (0);
 	f_speed_control_enabled = false;
 
@@ -69,8 +73,8 @@ void TCONTRECT::gpio_rectifier_enable (bool val)
 void TCONTRECT::oc_control_enabled (bool val)
 {
 	rpmcontr_sw = ERPMSW_NONE;
-	f_phase_value_new_isr = false;
-	f_phase_value_new_sys = false;
+	//f_phase_value_new_isr = false;
+	//f_phase_value_new_sys = false;
 	f_oc_interupt_enabled = false;
 	f_phase_control_active = false;
 	timer_timeout_ext_isr.set (0);
@@ -114,20 +118,23 @@ void TCONTRECT::Task ()
 			}
 		if (f_phase_control_active)
 			{
-			if (!f_phase_value_new_sys)
-				{
-				float val_quant = period_180; val_quant /= 180.0F;
-				tick_phase_rectifier_sys_on = program_rect_angle_on * val_quant;
-				tick_phase_rectifier_sys_off = program_rect_angle_off * val_quant;
-				f_phase_value_new_sys = true;
-				}	
-			if (f_phase_value_new_isr && !f_oc_interupt_enabled) oc_control_enabled (true);
+
+			if (!f_oc_interupt_enabled) oc_control_enabled (true);
 			}
 		else
 			{
 			if (f_oc_interupt_enabled) oc_control_enabled (false);
 			}
 		}
+}
+
+
+
+float TCONTRECT::get_freq ()
+{
+	float rv = 1.0F;
+	double meas = 0.000001 * tick_delta_360_Angle;
+	return rv / meas;
 }
 
 
@@ -141,11 +148,13 @@ void TCONTRECT::tim_comp_cb_isr (ESYSTIM t, EPWMCHNL ch)
 			switch (ch)
 				{
 				case EPWMCHNL_PWM1:
+				case EPWMCHNL_PWM3:
 					{
 					gpio_rectifier_enable (true);
 					break;
 					}
 				case EPWMCHNL_PWM2:
+				case EPWMCHNL_PWM4:
 					{
 					gpio_rectifier_enable (false);
 					break;
@@ -165,76 +174,57 @@ void TCONTRECT::update_phase_points (uint32_t tcnreg)
 {
 	if (f_oc_interupt_enabled)
 		{
-		set_timer_oc_value (EPWMCHNL_PWM1, tcnreg + tick_phase_rectifier_isr_on);
-		set_timer_oc_value (EPWMCHNL_PWM2, tcnreg + tick_phase_rectifier_isr_off);
+		set_timer_oc_value (EPWMCHNL_PWM1, tcnreg + tick_phase_rectifier_isr_on_a);
+		set_timer_oc_value (EPWMCHNL_PWM2, tcnreg + tick_phase_rectifier_isr_off_a);
+		set_timer_oc_value (EPWMCHNL_PWM3, tcnreg + tick_phase_rectifier_isr_on_b);
+		set_timer_oc_value (EPWMCHNL_PWM4, tcnreg + tick_phase_rectifier_isr_off_b);
 		}
 }
 
 
 
 
+
 void TCONTRECT::isr_gpio_cb_int (uint8_t isr_n, bool pinstate)
 {
-	uint32_t cur_meas_tick = get_timer_counter ();
+TGLOBISR::disable ();
+	uint32_t cur_meas_tick = get_timer_counter (), tmp_360meas;
+	
 	timer_timeout_ext_isr.set (1000);
 	
-	if (f_phase_value_new_sys)
-		{
-		tick_phase_rectifier_isr_on = tick_phase_rectifier_sys_on;
-		tick_phase_rectifier_isr_off = tick_phase_rectifier_sys_off;
-		f_phase_value_new_sys = false;
-		f_phase_value_new_isr = true;
-		}
-	bool f_error = false;
+		/*
+		tick_phase_rectifier_isr_on_a = tick_phase_rectifier_sys_on_a;
+		tick_phase_rectifier_isr_off_a = tick_phase_rectifier_sys_off_a;
+		tick_phase_rectifier_isr_on_b = tick_phase_rectifier_sys_on_b;
+		tick_phase_rectifier_isr_off_b = tick_phase_rectifier_sys_off_b;
+	*/
+
 	switch (rpmcontr_sw)
 		{
 		case ERPMSW_FRONTE_0_360_ANGLE:
 			{
-			if (pinstate)
+			tick_delta_360_Angle = cur_meas_tick - tick_0_angle;		// прошлое значение фронта tick_delta_360_Angle
+			if (tick_delta_360_Angle > 100)
 				{
-				tick_delta_360_Angle = cur_meas_tick - tick_0_angle;		// прошлое значение фронта
 				tick_0_angle = cur_meas_tick;
-					
-				if (f_phase_control_active && f_phase_value_new_isr) update_phase_points (cur_meas_tick);
-					
-				rpmcontr_sw = ERPMSW_FALL_180_ANGLE;
-				}
-			else
-				{
-				f_error = true;
-				}
-			break;
-			}
-		case ERPMSW_FALL_180_ANGLE:
-			{
-			if (!pinstate)
-				{
-				tick_180_angle = cur_meas_tick;
-					
-				if (f_phase_control_active && f_phase_value_new_isr) update_phase_points (cur_meas_tick);
-					
-				rpmcontr_sw = ERPMSW_FRONTE_0_360_ANGLE;
-				local_rpm_tick_counter++;
-				}
-			else
-				{
-				f_error = true;
+				uint32_t period_180 = tick_delta_360_Angle / 2;
+			
+				float val_quant = period_180; val_quant /= 180.0F;
+				tick_phase_rectifier_isr_on_a = program_rect_angle_on * val_quant;
+				tick_phase_rectifier_isr_off_a = program_rect_angle_off * val_quant;
+				tick_phase_rectifier_isr_on_b = period_180 + tick_phase_rectifier_isr_on_a;
+				tick_phase_rectifier_isr_off_b = period_180 + tick_phase_rectifier_isr_off_a;
+				if (f_phase_control_active) update_phase_points (cur_meas_tick);
 				}
 			break;
 			}
 		default:
 			{
-			f_error = true;
+			rpmcontr_sw = ERPMSW_FRONTE_0_360_ANGLE;
 			break;
 			}
 		}
-	if (f_error)
-		{
-		rpmcontr_sw = ERPMSW_FRONTE_0_360_ANGLE;
-		f_phase_control_active = false;
-		f_phase_value_new_sys = false;
-		f_phase_value_new_isr = false;
-		}
+TGLOBISR::enable ();
 }
 
 

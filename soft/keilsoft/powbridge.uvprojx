@@ -618,6 +618,11 @@
               <FileType>8</FileType>
               <FilePath>.\src\classes\fonts\ptmono8.cpp</FilePath>
             </File>
+            <File>
+              <FileName>TGLOBALISR.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\src\classes\TGLOBALISR.cpp</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

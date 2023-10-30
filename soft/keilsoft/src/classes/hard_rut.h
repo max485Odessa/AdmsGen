@@ -5,13 +5,19 @@
 
 #include "stm32f4xx_hal.h"
 
+
+
+enum ESYSTIM {ESYSTIM_TIM1 = 0, ESYSTIM_TIM2, ESYSTIM_TIM3, ESYSTIM_TIM4, ESYSTIM_TIM5, ESYSTIM_TIM6, ESYSTIM_TIM7, ESYSTIM_TIM8, ESYSTIM_TIM9, ESYSTIM_TIM10, ESYSTIM_TIM11, ESYSTIM_TIM12, ESYSTIM_ENDENUM};
 enum EGPMD {EGPMD_OD, EGPMD_PP, EGPMD_IN, EGPMD_AIN, EGPMD_ENDENUM};
 enum EGPINTMOD {EGPINTMOD_RISING = 0, EGPINTMOD_FALLING = 1, EGPINTMOD_RISING_FALLING = 2, EGPINTMOD_ENDENUM};
+
+
 
 typedef struct {
 	GPIO_TypeDef *port;
 	uint16_t pin;
 } S_GPIOPIN;
+
 
 
 typedef struct {
@@ -21,6 +27,9 @@ typedef struct {
 } S_GPMD_PIN_T;
 
 
+
+TIM_TypeDef *hard_get_tim (ESYSTIM t);
+void hard_tim_clock_enable (ESYSTIM tn);
 void hard_usart_clock_enable (USART_TypeDef *p);
 void hard_gpio_clock_enable (GPIO_TypeDef *port);
 void _pin_low_init (S_GPMD_PIN_T *lp_pin, unsigned char cnt);

@@ -29,6 +29,32 @@ TCORERCT::TCORERCT (TCONTRECT *rectifier, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF 
 	f_lcd_needupdate = true;
 	str_tmp.set_space (strtemporarymem, sizeof(strtemporarymem)-1);
 	set_page (EPAGE_PARAM_LIST);
+	params_aply ();
+}
+
+
+
+void TCORERCT::params_aply ()
+{
+	S_MDAT_T *prm;
+	float s, p;
+	do	{
+			prm = params->get_value (EPRMIX_R_ANGLE_ON);
+			if (!prm) break;
+			s = prm->u.f;
+		
+			prm = params->get_value (EPRMIX_R_ANGLE_OFF);
+			if (!prm) break;
+			p = prm->u.f;
+		
+			rectifier_contrl->control_rectifier (s, p);
+		
+			prm = params->get_value (EPRMIX_RECT_ENABLE);
+			if (!prm) break;
+			rectifier_contrl->rectifier_enabled (prm->u.u32);
+			
+			}	while (false);
+	S_MDAT_T *get_value (long ix);
 	
 }
 
@@ -372,6 +398,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 				if (f_is_edit_param_mode)
 					{
 					param_change_updown (edit_param_ix, true);
+					params_aply ();
 					f_lcd_needupdate = true;
 					}
 				break;
@@ -381,6 +408,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 				if (f_is_edit_param_mode)
 					{
 					param_change_updown (edit_param_ix, false);
+					params_aply ();
 					f_lcd_needupdate = true;
 					}
 				break;
@@ -397,6 +425,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 			param_change_updown (edit_param_ix, true);
 			key_rep_timer.set (calc_repeate_frompushtime (pushtime));
 			keys->block_next_msg (EKEYSID_UP);
+			params_aply ();
 			f_lcd_needupdate = true;
 			}
 		pushtime = keys->get_pushtime_cur (EKEYSID_DOWN);
@@ -405,6 +434,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 			param_change_updown (edit_param_ix, false);
 			key_rep_timer.set (calc_repeate_frompushtime (pushtime));
 			keys->block_next_msg (EKEYSID_DOWN);
+			params_aply ();
 			f_lcd_needupdate = true;
 			}
 		}

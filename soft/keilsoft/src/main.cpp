@@ -13,8 +13,8 @@
 
 
 void SystemClockHSE_Config (void);
-static S_GPIOPIN pinphase_in_a = {};
-static S_GPIOPIN pinphase_out_a = {};
+static S_GPIOPIN pinphase_in_a = {GPIOB,GPIO_PIN_12};	// pb12, pb13, pb14
+static S_GPIOPIN pinphase_out_a = {GPIOB,GPIO_PIN_0};		// pb0, pb1, pb2
 	
 static S_GPIOPIN pinsi2c_a[EARRI2CPIN_ENDENUM] = {{GPIOB,GPIO_PIN_3}/*scl*/, {GPIOB,GPIO_PIN_4}/*sda*/};
 static const S_GPIOPIN rawpins_keys[EJSTCPINS_ENDENUM] = {{GPIOB,GPIO_PIN_5}, {GPIOB,GPIO_PIN_6}, {GPIOB,GPIO_PIN_7}, {GPIOB,GPIO_PIN_8}, {GPIOB,GPIO_PIN_9}};
@@ -70,7 +70,7 @@ int main ()
 	canva->Init ();
 	lcd = new TST7565RSPI (const_cast<S_GPIOPIN*>(rawpins_lcd));
 	lcd->LCD_init ();
-	rectifier = new TCONTRECT (&pinphase_in_a, &pinphase_out_a, ESYSTIM_TIM2, 1000000, 10);
+	rectifier = new TCONTRECT (&pinphase_out_a, &pinphase_in_a, ESYSTIM_TIM2, 1000000, 10);
 	
 	//canva->DrawCircle (20, 20, 10);
 	

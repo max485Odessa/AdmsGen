@@ -82,6 +82,8 @@ class TCORERCT: public TFFC {
 		void draw_paramedit_page (long prm_ix);
 		void draw_main_screens ();
 		
+		void params_aply ();
+		
 	public:
 		TCORERCT (TCONTRECT *rectifier, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m);
 		bool is_lcd_update ();
