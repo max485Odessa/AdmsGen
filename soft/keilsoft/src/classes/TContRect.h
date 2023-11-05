@@ -16,8 +16,9 @@ enum ERPMSW {ERPMSW_NONE = 0, ERPMSW_FRONTE_0_360_ANGLE,  ERPMSW_ENDENUM};		// E
 
 
 
+// public ITIM_ISR,
 
-class TCONTRECT: public ITIM_ISR, public IEXTINT_ISR, public TFFC, public SYSBIOS::Periodic {
+class TCONTRECT: public ITIMCB, public IEXTINT_ISR, public TFFC, public SYSBIOS::Periodic {
 		uint32_t local_rpm_tick_counter;
 		uint32_t result_rpm_tick_counter;
 		virtual void periodic_cb (SYSBIOS::HPERIOD h) override;
@@ -31,11 +32,7 @@ class TCONTRECT: public ITIM_ISR, public IEXTINT_ISR, public TFFC, public SYSBIO
 		uint32_t speed_stop_sys;			// for 180 angle tick period
 		bool f_speed_control_enabled;
 	
-		uint32_t tick_phase_rectifier_sys_on_a;			// for 180 angle tick period
-		uint32_t tick_phase_rectifier_sys_off_a;			// for 180 angle tick period
-		uint32_t tick_phase_rectifier_sys_on_b;			// for 180 angle tick period
-		uint32_t tick_phase_rectifier_sys_off_b;			// for 180 angle tick period
-		//bool f_phase_value_new_sys;
+
 		uint32_t tick_phase_rectifier_isr_on_a;				// for 180 angle tick period
 		uint32_t tick_phase_rectifier_isr_off_a;			// for 180 angle tick period
 		uint32_t tick_phase_rectifier_isr_on_b;				// for 180 angle tick period
@@ -60,7 +57,8 @@ class TCONTRECT: public ITIM_ISR, public IEXTINT_ISR, public TFFC, public SYSBIO
 		void gpio_rectifier_enable (bool val);
 		//bool f_is_new_control_angle;
 	
-		virtual void tim_comp_cb_isr (ESYSTIM t, EPWMCHNL ch) override;
+		//virtual void tim_comp_cb_isr (ESYSTIM t, EPWMCHNL ch) override;
+		virtual void tim_comp_cb_user_isr (ESYSTIM t, EPWMCHNL ch) override;
 		virtual void isr_gpio_cb_int (uint8_t isr_n, bool pinstate) override;
 		const uint8_t c_magnet_cnt;
 		virtual void Task () override;
@@ -69,6 +67,7 @@ class TCONTRECT: public ITIM_ISR, public IEXTINT_ISR, public TFFC, public SYSBIO
 	protected:
 	
 		bool f_rectifier_system_enabled;
+		ITIM_ISR *timrect;
 	
 	public:
 		TCONTRECT (S_GPIOPIN *pnout, S_GPIOPIN *pnin, ESYSTIM tt, uint32_t freq_hz, uint8_t cmagcnt);

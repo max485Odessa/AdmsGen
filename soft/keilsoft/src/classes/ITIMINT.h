@@ -13,6 +13,11 @@ enum EPWMCHNL {EPWMCHNL_PWM1 = 0, EPWMCHNL_PWM2 = 1, EPWMCHNL_PWM3 = 2, EPWMCHNL
 #define C_RECTIFIRE_TIM ESYSTIM_TIM2
 
 
+class ITIMCB {
+	public:
+		virtual void tim_comp_cb_user_isr (ESYSTIM t, EPWMCHNL ch) = 0;
+};
+
 
 class ITIM_ISR {
 		bool f_active_isr[EPWMCHNL_ENDENUM];
@@ -20,23 +25,20 @@ class ITIM_ISR {
 		TIM_HandleTypeDef TimHandle;
 		ESYSTIM tim_ix;
 	
-	protected:
-
-		void timer_init (uint32_t period, uint32_t hz);
-		virtual void tim_comp_cb_isr (ESYSTIM t, EPWMCHNL ch) = 0;		// isr context executed
+		ITIMCB *callback_user;
 	
-		void clr_tim ();		// очистить таймер 
+	public:
+		
+		ITIM_ISR (ESYSTIM t, ITIMCB *cb);
+		void isr_tim ();
+	
+		void timer_init (uint32_t period, uint32_t hz);
+	
 		uint32_t get_timer_counter ();
 		void enable_timer_isr (bool st);
 		void enable_timer_oc (EPWMCHNL c, bool state);
 		void set_timer_oc_value (EPWMCHNL c, uint32_t v);
-		
-		
-		ITIM_ISR (ESYSTIM t);
-	
-	public:
-		
-		void isr_tim ();
+		void clr_tim ();		// очистить таймер 
 };
 
 

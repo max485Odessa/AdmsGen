@@ -623,6 +623,11 @@
               <FileType>8</FileType>
               <FilePath>.\src\classes\TGLOBALISR.cpp</FilePath>
             </File>
+            <File>
+              <FileName>THALLRATIOMETRIC.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\src\classes\THALLRATIOMETRIC.cpp</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

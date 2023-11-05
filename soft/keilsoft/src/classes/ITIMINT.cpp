@@ -43,8 +43,9 @@ void TIM5_IRQHandler ()
 
 
 
-ITIM_ISR::ITIM_ISR (ESYSTIM t)
+ITIM_ISR::ITIM_ISR (ESYSTIM t, ITIMCB *cb)
 {
+	callback_user = cb;
 	TimHandle.Instance = hard_get_tim (t);
 	isr_this[t] = this;
 	tim_ix = t;
@@ -78,27 +79,27 @@ void ITIM_ISR::isr_tim ()
 {
 	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC1) !=RESET)
     {
-			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM1);
+			callback_user->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM1);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC1);
 		}
 	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC2) !=RESET)
     {
-			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM2);
+			callback_user->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM2);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC2);
 		}
 	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC3) !=RESET)
     {
-			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM3);
+			callback_user->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM3);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC3);
 		}
 	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC4) !=RESET)
     {
-			tim_comp_cb_isr (tim_ix, EPWMCHNL_PWM4);
+			callback_user->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM4);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC4);
 		}
 	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_UPDATE) !=RESET)
     {
-			tim_comp_cb_isr (tim_ix, EPWMCHNL_UPDATE);
+			callback_user->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_UPDATE);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_UPDATE);
 		}
 }

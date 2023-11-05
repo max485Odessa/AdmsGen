@@ -367,4 +367,23 @@ if (!f_activated)
 }
 //---------------------------------------------------------------------------
 
+// degrees = radians * (180.0/3.141592653589793238463)
+float get_asin_volt (float amp_peack, float cur_peack)
+{
+if (cur_peack > amp_peack) cur_peack = amp_peack;
+float tosin = cur_peack / amp_peack;
+
+float val = asin (tosin) * (180.0/3.141592653589793238463);
+return val;
+}
+
+
+
+
+
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+float rslt = get_asin_volt (100, 90);
+}
+//---------------------------------------------------------------------------
 

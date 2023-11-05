@@ -386,9 +386,9 @@ void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md)
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;//GPIO_SPEED_FREQ_LOW;//GPIO_SPEED_FREQ_VERY_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;//GPIO_SPEED_FREQ_LOW;//GPIO_SPEED_FREQ_VERY_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
 		GPIO_InitStructure.Mode = modintarr[md];
-		GPIO_InitStructure.Pull = GPIO_NOPULL;//GPIO_NOPULL;
+		GPIO_InitStructure.Pull = GPIO_PULLDOWN;//GPIO_NOPULL;
 		GPIO_InitStructure.Alternate = 0;
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);

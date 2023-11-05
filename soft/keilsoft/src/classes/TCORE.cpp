@@ -9,12 +9,16 @@ extern const unsigned char resname_ptmono8_f[];
  static S_MVPARAM_FLOAT_T param_r_angle_off = {"angl.off", MAV_PARAM_TYPE_REAL32,  0, 0, 180, 90, 0.2F};
  static S_MVPARAM_U32_T param_rpm_speed_start = {"rpm.s", MAV_PARAM_TYPE_UINT32, 1, 6, 30, 1, 1};
  static S_MVPARAM_U32_T param_rpm_speed_stop = {"rpm.p" , MAV_PARAM_TYPE_UINT32, 0, 1, 1000, 1, 1};
+static S_MVPARAM_FLOAT_T param_motor_angl_on = {"angl.m.on", MAV_PARAM_TYPE_REAL32,  0, 0, 180, 0, 1.0F};
+static S_MVPARAM_FLOAT_T param_motor_angl_off = {"angl.m.off", MAV_PARAM_TYPE_REAL32,  0, 0, 180, 90, 1.0F};
+static S_MVPARAM_FLOAT_T param_motor_freq = {"m.freq", MAV_PARAM_TYPE_REAL32,  0, 2, 30, 5, 1};
+static S_MVPARAM_U32_T param_motor_pwm = {"m.pwm", MAV_PARAM_TYPE_UINT32,  0, 0, 100, 1, 1};
 
 
 
 static const S_MVPARAM_HDR_T *curlist[EPRMIX_ENDENUM] = {(S_MVPARAM_HDR_T*)&param_rectifier_enable, (S_MVPARAM_HDR_T*)&param_speed_ctrl_enable, (S_MVPARAM_HDR_T*)&param_r_angle_on, \
 (S_MVPARAM_HDR_T*)&param_r_angle_off, (S_MVPARAM_HDR_T*)&param_rpm_speed_start, (S_MVPARAM_HDR_T*)&param_rpm_speed_stop, \
-};
+(S_MVPARAM_HDR_T*)&param_motor_angl_on, (S_MVPARAM_HDR_T*)&param_motor_angl_off, (S_MVPARAM_HDR_T*)&param_motor_freq, (S_MVPARAM_HDR_T*)&param_motor_pwm};
 
 
 

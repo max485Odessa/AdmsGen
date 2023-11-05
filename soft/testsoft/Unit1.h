@@ -41,6 +41,7 @@ __published:	// IDE-managed Components
     TLabel *Label8;
     TButton *Button1;
     TMemo *Memo1;
+    TButton *Button2;
     void __fastcall Edit1Change(TObject *Sender);
     void __fastcall Edit2Change(TObject *Sender);
     void __fastcall Edit3Change(TObject *Sender);
@@ -52,6 +53,7 @@ __published:	// IDE-managed Components
     void __fastcall Button1Click(TObject *Sender);
     void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
     void __fastcall FormActivate(TObject *Sender);
+    void __fastcall Button2Click(TObject *Sender);
 private:	// User declarations
     bool checking_floatval (TEdit *ed);
     bool gui_to_data ( S_FULLPARAM_T &dst);
