@@ -378,12 +378,79 @@ return val;
 }
 
 
+uint16_t c_zero_gaus = 2048;
+uint16_t c_peack_gaus = 2047;
+
+
+float asingen (float sval)
+{
+	float rv = asin (sval) * (180.0/3.141592653589793238463);
+	return rv;
+}
+
+
+
+
+float calc_angle (uint16_t raw_a, uint16_t raw_b)
+{
+	float rv = 0;
+	uint8_t sel = 0;
+	float valp_a = raw_a;
+	float valp_b = raw_b;
+	
+	valp_a -= c_zero_gaus;
+	valp_b -= c_zero_gaus;
+	if (valp_a >= 0) sel |= 1;
+	if (valp_b >= 0) sel |= 2;
+	
+	float valsin_a = valp_a;
+	if (valsin_a < 0) valsin_a *= -1;
+	float ampsinval_a = valsin_a / c_peack_gaus;
+	
+	float val_asin = asingen (ampsinval_a);
+	
+	switch (sel)
+		{
+		case ESPOLE_0_89:
+			{
+			rv = val_asin;
+			break;
+			}
+		case ESPOLE_90_179:
+			{
+			rv = 180.0F - val_asin;
+			break;
+			}
+		case ESPOLE_180_269:
+			{
+			rv = 180.0F + val_asin;
+			break;
+			}
+		case ESPOLE_270_359:
+			{
+			rv = 360.0F - val_asin;
+			break;
+			}
+		}
+return rv;
+}
+
 
 
 
 void __fastcall TForm1::Button2Click(TObject *Sender)
 {
-float rslt = get_asin_volt (100, 90);
+float cur_angl = 0;
+float c_angl_inc = 20;
+float rawval_a, rawval_b;
+while (cur_angl < 360)
+    {
+    rawval_a = 2048 + sin (cur_angl * 3.14 / 180) * 2047;
+    rawval_b = 2048 + sin ((cur_angl + 90) * 3.14 / 180) * 2047;
+    float rslt = calc_angle (rawval_a, rawval_b);
+    cur_angl += c_angl_inc;
+    }
+
 }
 //---------------------------------------------------------------------------
 

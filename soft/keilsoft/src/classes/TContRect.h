@@ -16,8 +16,6 @@ enum ERPMSW {ERPMSW_NONE = 0, ERPMSW_FRONTE_0_360_ANGLE,  ERPMSW_ENDENUM};		// E
 
 
 
-// public ITIM_ISR,
-
 class TCONTRECT: public ITIMCB, public IEXTINT_ISR, public TFFC, public SYSBIOS::Periodic {
 		uint32_t local_rpm_tick_counter;
 		uint32_t result_rpm_tick_counter;

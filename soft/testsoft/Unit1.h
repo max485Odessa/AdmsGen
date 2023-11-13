@@ -20,6 +20,17 @@ typedef struct {
 } S_FULLPARAM_T;
 
 
+// UGN3503UA, AH3503, SS49, DRV5055
+// ??? ??????? ???????? ???? ?? ????? ?? 90 ????????
+/*       A       B
+0-89    (0 or +, +)
+90-179  (+, 0 or -)
+180-269	(0 or -, -)
+270-359 (-, 0 or +)
+*/
+enum ESPOLE {ESPOLE_180_269 = 0, ESPOLE_90_179 = 1, ESPOLE_270_359 = 2, ESPOLE_0_89 = 3};
+
+
 class TForm1 : public TForm
 {
 __published:	// IDE-managed Components
