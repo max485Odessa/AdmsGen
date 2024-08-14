@@ -80,7 +80,7 @@ class TLINEARHALL: public TFFC, public ITIMCB {
 	
 		virtual void Task () override;
 		virtual void tim_comp_cb_user_isr (ESYSTIM t, EPWMCHNL ch) override;
-		ITIM_ISR *timisr;
+		TTIM_MKS_ISR *timisr;
 	
 		EHALLCTRLPOS ctrlpos;
 	

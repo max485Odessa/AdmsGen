@@ -22,18 +22,46 @@ static const S_MVPARAM_HDR_T *curlist[EPRMIX_ENDENUM] = {(S_MVPARAM_HDR_T*)&para
 
 
 
-TCORERCT::TCORERCT (TCONTRECT *rectifier, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m)
+TCORERCT::TCORERCT (THALLDIG *rectifier,  TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m)
 {
 	memi2c = m;
 	params = new TPARAMCONTRL (memi2c, 0, 8192, (S_MVPARAM_HDR_T**)curlist, EPRMIX_ENDENUM);
 	params->load ();
 	rectifier_contrl = rectifier;
+	rectifier_contrl->enable (true);
+	rectifier_contrl->set_cb (this);
 	canva = c;
 	keys = k;
 	f_lcd_needupdate = true;
 	str_tmp.set_space (strtemporarymem, sizeof(strtemporarymem)-1);
 	set_page (EPAGE_PARAM_LIST);
 	params_aply ();
+}
+
+
+
+void TCORERCT::cb_ifhall (uint32_t ps)
+{
+	switch (ps)
+		{
+		case EANGLPCOD_A: 
+			{
+			break;
+			}
+		case EANGLPCOD_B:
+			{
+			break;
+			}
+		case EANGLPCOD_C:
+			{
+			break;
+			}
+		case EANGLPCOD_D:
+			{
+			break;
+			}
+		default: break;
+		}
 }
 
 
@@ -51,15 +79,16 @@ void TCORERCT::params_aply ()
 			if (!prm) break;
 			p = prm->u.f;
 		
-			rectifier_contrl->control_rectifier (s, p);
+			rectifier_contrl->add_replace_point (s,EANGLPCOD_A);
+			rectifier_contrl->add_replace_point (p,EANGLPCOD_B);
+			rectifier_contrl->enable (true);
 		
 			prm = params->get_value (EPRMIX_RECT_ENABLE);
 			if (!prm) break;
-			rectifier_contrl->rectifier_enabled (prm->u.u32);
+			//rectifier_contrl->enable (prm->u.u32);
 			
 			}	while (false);
-	S_MDAT_T *get_value (long ix);
-	
+
 }
 
 

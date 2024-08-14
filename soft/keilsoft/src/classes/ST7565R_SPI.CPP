@@ -8,7 +8,7 @@
 TST7565RSPI::TST7565RSPI (S_GPIOPIN *p)
 {
 	rawpins = p;
-	_pin_low_init_out_pp (rawpins, EST7565P_ENDENUM);
+	_pin_low_init_out_pp (rawpins, EST7565P_ENDENUM, EHRTGPIOSPEED_HI);
 }
 
 
@@ -159,7 +159,7 @@ spi_cmd_single (bSend >> 2);
 
 void TST7565RSPI::SpiModeInit ()
 {
-	_pin_low_init_out_pp ((S_GPIOPIN*)&rawpins, EST7565P_ENDENUM);
+	_pin_low_init_out_pp ((S_GPIOPIN*)&rawpins, EST7565P_ENDENUM, EHRTGPIOSPEED_HI);
 
 	rawpins[EST7565P_SCL].port->BSRR = rawpins[EST7565P_SCL].pin << 16;			// clk = 0
 	CSSetTo (1);

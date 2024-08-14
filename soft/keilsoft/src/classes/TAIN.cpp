@@ -10,7 +10,7 @@ static __IO uint16_t uhADCxConvertedValue[EAINCH_ENDENUM];
 
 TAIN::TAIN ()
 {
-	_pin_low_init_adc (const_cast<S_GPIOPIN*>(adcpinsarr), EAINPIN_ENDENUM);
+	_pin_low_init_adc (const_cast<S_GPIOPIN*>(adcpinsarr), EAINPIN_ENDENUM, EHRTGPIOSPEED_LOW);
 	ADC_ChannelConfTypeDef sConfig;
   DMA_HandleTypeDef  hdma_adc;
 
@@ -65,6 +65,16 @@ TAIN::TAIN ()
 	HAL_ADC_Start_DMA(&AdcHandle, (uint32_t*)&uhADCxConvertedValue, EAINCH_ENDENUM);
 	quant_value = 0;
 }
+
+
+
+uint16_t *TAIN::adr_voltage_raw (EAINPIN ch)
+{
+	uint16_t *rv = 0;
+	if (ch < EAINPIN_ENDENUM) rv = (uint16_t*)&uhADCxConvertedValue[ch];
+	return rv;
+}
+
 
 
 

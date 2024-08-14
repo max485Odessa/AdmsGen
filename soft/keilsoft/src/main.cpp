@@ -1,6 +1,6 @@
 #include "stm32f4xx_hal.h"
 #include "TAIN.h"
-#include "TcontRect.h"
+//#include "TcontRect.h"
 #include "SYSBIOS.H"
 #include "TFTASKIF.h"
 #include "ST7565R_SPI.H"
@@ -9,8 +9,16 @@
 #include "TCORE.h"
 #include "TM24Cxxx.h"
 #include "I2CSOFTWARE.H"
+#include "IEXTINT.h"
+#include "THALLDIG.h"
+#include "ITIMINT.h"
 
 
+
+/*
+USED RESOURCES:
+	
+*/
 
 void SystemClockHSE_Config (void);
 static S_GPIOPIN pinphase_in_a = {GPIOB,GPIO_PIN_12};	// pb12, pb13, pb14
@@ -20,13 +28,19 @@ static S_GPIOPIN pinsi2c_a[EARRI2CPIN_ENDENUM] = {{GPIOB,GPIO_PIN_3}/*scl*/, {GP
 static const S_GPIOPIN rawpins_keys[EJSTCPINS_ENDENUM] = {{GPIOB,GPIO_PIN_5}, {GPIOB,GPIO_PIN_6}, {GPIOB,GPIO_PIN_7}, {GPIOB,GPIO_PIN_8}, {GPIOB,GPIO_PIN_9}};
 static const S_GPIOPIN rawpins_lcd[EST7565P_ENDENUM] = {/*EST7565P_CS*/{GPIOA,GPIO_PIN_11}, /*EST7565P_REST*/{GPIOA, GPIO_PIN_10}, /*EST7565P_RS*/{GPIOA, GPIO_PIN_9},\
 /*EST7565P_SCL*/ {GPIOA, GPIO_PIN_8}, /*EST7565P_SI*/{GPIOB, GPIO_PIN_15}};
-static TCONTRECT *rectifier;
+//static TCONTRECT *rectifier;
 static TST7565RSPI *lcd;
 static TLCDCANVABW *canva;
 static TEASYKEYS *keys;
 static TCORERCT *core;
 static TI2CIFACE *busi2c;
 static TM24C16 *memi2c;
+//static TLINEARHALL *linear_hall;
+static TAIN *ain;
+static TEXTINT_ISR *extint_obj;
+static TTIM_MKS_ISR *timisr_obj;
+static THALLDIG *dighall;
+//static TPULSEMOTOR *motor;
 	
 #ifdef __cplusplus
  extern "C" {
@@ -70,11 +84,21 @@ int main ()
 	canva->Init ();
 	lcd = new TST7565RSPI (const_cast<S_GPIOPIN*>(rawpins_lcd));
 	lcd->LCD_init ();
-	rectifier = new TCONTRECT (&pinphase_out_a, &pinphase_in_a, ESYSTIM_TIM2, 1000000, 10);
+	
+	extint_obj = new TEXTINT_ISR (&pinphase_in_a, EGPINTMOD_RISING);
+	timisr_obj = new TTIM_MKS_ISR (ESYSTIM_TIM2, 0xFFFFFFFF, 1000000);
+
+	dighall = new THALLDIG (timisr_obj, extint_obj, EPWMCHNL_PWM2, &pinphase_out_a, 4);
+	dighall->enable (true);
+	extint_obj->set_cb (dighall);
+	//rectifier = new TCONTRECT (extint_obj, timisr_obj, 10);
+	ain = new TAIN ();
+
+	//linear_hall = new TLINEARHALL (ain->adr_voltage_raw (EAINPIN_RATIO_A), ain->adr_voltage_raw (EAINPIN_RATIO_B), 0.001F, 10.1F, motor, ESYSTIM_TIM5);
 	
 	//canva->DrawCircle (20, 20, 10);
 	
-	core = new TCORERCT (rectifier, canva, keys, memi2c);
+	core = new TCORERCT (dighall, canva, keys, memi2c);
 	updline_cnt = C_LCD_PAGE_AMOUNT;
 	
 	while (true)

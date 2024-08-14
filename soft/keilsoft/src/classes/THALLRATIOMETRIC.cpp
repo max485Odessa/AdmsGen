@@ -10,8 +10,8 @@ TLINEARHALL::TLINEARHALL (uint16_t *adrdata_sa, uint16_t *adrdata_sb, float quan
 	etim = t;
 	ain_sens_a = adrdata_sa;
 	ain_sens_b = adrdata_sb;
-	timisr = new ITIM_ISR (t, this);
-	timisr->timer_init (10, 1000000);
+	timisr = new ITIM_MKS_ISR (t, 0xFFFFFFFF, 1000000);
+	//timisr->timer_init (10, 1000000);
 	sync ();
 	asintab = new float[C_ASINTAB_SIZE];
 	asintab_generate ();

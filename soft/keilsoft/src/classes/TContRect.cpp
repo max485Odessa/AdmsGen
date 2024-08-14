@@ -2,18 +2,24 @@
 #include "TGlobalISR.h"
 
 
-TCONTRECT::TCONTRECT (S_GPIOPIN *pnout, S_GPIOPIN *pnin, ESYSTIM tt, uint32_t freq_hz, uint8_t cmagcnt) : c_magnet_cnt (cmagcnt), IEXTINT_ISR(pnin, EGPINTMOD_RISING)
+
+TCONTRECT::TCONTRECT (TEXTINT_ISR *ei, TTIM_MKS_ISR *tisr, uint8_t cmagcnt) : c_magnet_cnt (cmagcnt)
 {
-	timrect = new ITIM_ISR (tt, this);
+	
+	ext_isr = ei;
+	timrect = tisr;
+	/*
+	timrect = new ITIM_MKS_ISR (tt, 0xFFFFFFFF, 1000000);
 	//f_is_new_control_angle = false;
-	timrect->timer_init (0xFFFFFFFF, freq_hz);
+	//timrect->timer_init (0xFFFFFFFF, freq_hz);
 	timrect->enable_timer_oc (EPWMCHNL_PWM1, true);
 	timrect->enable_timer_oc (EPWMCHNL_PWM2, true);
 	timrect->enable_timer_oc (EPWMCHNL_PWM3, true);
 	timrect->enable_timer_oc (EPWMCHNL_PWM4, true);
+	*/
 	
-	c_pin_out = pnout;
-	_pin_low_init_out_pp (c_pin_out, 1);
+	//c_pin_out = pnout;
+	//_pin_low_init_out_pp (c_pin_out, 1, EHRTGPIOSPEED_HI);
 	timer_timeout_ext_isr.set (0);
 	f_speed_control_enabled = false;
 
@@ -183,7 +189,7 @@ void TCONTRECT::update_phase_points (uint32_t tcnreg)
 }
 
 
-
+/*
 void TCONTRECT::isr_gpio_cb_int (uint8_t isr_n, bool pinstate)
 {
 TGLOBISR::disable ();
@@ -191,12 +197,7 @@ TGLOBISR::disable ();
 	
 	timer_timeout_ext_isr.set (1000);
 	
-		/*
-		tick_phase_rectifier_isr_on_a = tick_phase_rectifier_sys_on_a;
-		tick_phase_rectifier_isr_off_a = tick_phase_rectifier_sys_off_a;
-		tick_phase_rectifier_isr_on_b = tick_phase_rectifier_sys_on_b;
-		tick_phase_rectifier_isr_off_b = tick_phase_rectifier_sys_off_b;
-	*/
+
 
 	switch (rpmcontr_sw)
 		{
@@ -226,5 +227,5 @@ TGLOBISR::disable ();
 		}
 TGLOBISR::enable ();
 }
-
+*/
 

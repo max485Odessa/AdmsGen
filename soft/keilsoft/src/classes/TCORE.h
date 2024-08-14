@@ -4,7 +4,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "TAIN.h"
-#include "TcontRect.h"
+#include "THALLDIG.h"
 #include "SYSBIOS.H"
 #include "TFTASKIF.h"
 #include "ST7565R_SPI.H"
@@ -13,11 +13,16 @@
 #include "TM24Cxxx.h"
 #include "STMSTRING.h"
 #include "TPARAMCONTROL.h"
-
+//#include "THALLRATIOMETRIC.h"
+//#include "TMOTORPULSE.h"
 
 enum EKEYSID {EKEYSID_RIGHT = 0, EKEYSID_LEFT, EKEYSID_UP, EKEYSID_DOWN , EKEYSID_OK, EJSTCPINS_ENDENUM};
 enum EPRMIX {EPRMIX_RECT_ENABLE = 0, EPRMIX_SPEED_CTRL_ENABLE = 1, EPRMIX_R_ANGLE_ON = 2, EPRMIX_R_ANGLE_OFF = 3, EPRMIX_SPEED_START = 4, EPRMIX_SPEED_STOP = 5, \
 EPRMIX_M_ANGLE_ON = 6, EPRMIX_M_ANGLE_OFF = 7, EPRMIX_M_FREQ = 8, EPRMIX_M_PWM = 9, EPRMIX_ENDENUM = 10};
+
+
+
+enum EANGLPCOD {EANGLPCOD_A = 0, EANGLPCOD_B, EANGLPCOD_C, EANGLPCOD_D, EANGLPCOD_ENDENUM};
 
 
 #pragma pack (push, 1)
@@ -33,7 +38,7 @@ typedef struct {
 
 enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_PARAM_LIST, EPAGE_ENDENUM};
 
-class TCORERCT: public TFFC {
+class TCORERCT: public TFFC, public IFHALLCB {
 		uint8_t gui_item_param_height ();
 		uint8_t border_updown_height ();
 		uint8_t gui_dislp_item_cnt ();
@@ -45,6 +50,8 @@ class TCORERCT: public TFFC {
 		bool f_is_edit_param_mode;
 		bool f_lcd_needupdate;
 	
+		void cb_ifhall (uint32_t ps) override;
+	
 	protected:
 		virtual void Task () override;
 		uint8_t strtemporarymem[128];
@@ -52,7 +59,7 @@ class TCORERCT: public TFFC {
 	
 		TPARAMCONTRL *params;
 	
-		TCONTRECT *rectifier_contrl;
+		THALLDIG *rectifier_contrl;
 		TLCDCANVABW *canva;
 		TEASYKEYS *keys;
 		TM24CIF *memi2c;
@@ -86,7 +93,7 @@ class TCORERCT: public TFFC {
 		void params_aply ();
 		
 	public:
-		TCORERCT (TCONTRECT *rectifier, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m);
+		TCORERCT (THALLDIG *rectifier,  TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m);
 		bool is_lcd_update ();
 		void set_page (EPAGE p);
 		

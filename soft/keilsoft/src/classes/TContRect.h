@@ -16,7 +16,9 @@ enum ERPMSW {ERPMSW_NONE = 0, ERPMSW_FRONTE_0_360_ANGLE,  ERPMSW_ENDENUM};		// E
 
 
 
-class TCONTRECT: public ITIMCB, public IEXTINT_ISR, public TFFC, public SYSBIOS::Periodic {
+class TCONTRECT: public ITIMCB,  public TFFC, public SYSBIOS::Periodic {
+	
+	
 		uint32_t local_rpm_tick_counter;
 		uint32_t result_rpm_tick_counter;
 		virtual void periodic_cb (SYSBIOS::HPERIOD h) override;
@@ -57,18 +59,19 @@ class TCONTRECT: public ITIMCB, public IEXTINT_ISR, public TFFC, public SYSBIOS:
 	
 		//virtual void tim_comp_cb_isr (ESYSTIM t, EPWMCHNL ch) override;
 		virtual void tim_comp_cb_user_isr (ESYSTIM t, EPWMCHNL ch) override;
-		virtual void isr_gpio_cb_int (uint8_t isr_n, bool pinstate) override;
+		//virtual void isr_gpio_cb_int (uint8_t isr_n, bool pinstate) override;
 		const uint8_t c_magnet_cnt;
 		virtual void Task () override;
 	
 		
 	protected:
-	
 		bool f_rectifier_system_enabled;
-		ITIM_ISR *timrect;
+	
+		TTIM_MKS_ISR *timrect;
+		TEXTINT_ISR *ext_isr;
 	
 	public:
-		TCONTRECT (S_GPIOPIN *pnout, S_GPIOPIN *pnin, ESYSTIM tt, uint32_t freq_hz, uint8_t cmagcnt);
+		TCONTRECT (TEXTINT_ISR *ei, TTIM_MKS_ISR *tisr, uint8_t cmagcnt);
 	
 		float get_rpm ();
 		void control_rectifier (float strt_angl, float stp_angl);

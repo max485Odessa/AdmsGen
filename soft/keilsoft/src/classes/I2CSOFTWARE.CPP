@@ -5,7 +5,7 @@
 TI2CIFACE::TI2CIFACE (const S_GPIOPIN *p, uint8_t w) : c_i2c_wait (w)
 {
 	pins = p;
-	_pin_low_init_out_od (const_cast<S_GPIOPIN*>(pins), EARRI2CPIN_ENDENUM);
+	_pin_low_init_out_od (const_cast<S_GPIOPIN*>(pins), EARRI2CPIN_ENDENUM, EHRTGPIOSPEED_HI);
 }
 
 
