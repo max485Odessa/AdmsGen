@@ -35,8 +35,6 @@ unsigned long abs32 (long datas);
 void *memset (void *lDst, unsigned char dat, long sizes);
 void *fillmem (void *lDst, unsigned char dat, long sizes);
 uint32_t GN_CRC32 (void *ldata, uint32_t size);
-//uint32_t HAL_GetTick ();
-//unsigned long HAL_RCC_GetPCLK1Freq ();
 unsigned long str_size (const char *lsrt);
 long strncmp( const char * string1, const char * string2, long num );
 unsigned long GetTagStringDelimIndx (char *lpLinetxt, unsigned long Indxx, char delimc, char **lDest, unsigned long *lPCountField);
@@ -49,7 +47,7 @@ void HardwareReset (void);
 unsigned char *UlongToStr (unsigned char *lpDest, unsigned long datas);
 unsigned char *LongToStr (unsigned char *lpDest, long datas);
 char *FloatToStr (char *lDst, float val, unsigned char dig_n);
-char *CopyMemorySDC (char *lpSour, char *lpDest, unsigned int sizes);
+char *CopyMemorySDC (void *lpSour, void *lpDest, uint32_t sizes);
 unsigned long CreateValueFromBitMassive (unsigned char *lInp, unsigned long CurOffset, unsigned char databitsize);
 unsigned char SWAPBits (unsigned char datas);
 unsigned long SwapBitsLong (unsigned long val, unsigned char bitsize);
@@ -62,6 +60,7 @@ unsigned char *UlongToStr_cnt (unsigned char *lpDest,unsigned long datas,unsigne
 void UlongToHex (unsigned char *lpDest, unsigned long datasl);
 uint32_t CalcCRC32Data (uint8_t *lSrc, uint32_t siz);
 uint32_t lenstr_max (const char *lsrt, uint32_t maxsz);
+float calculate_herz_from_mks (uint32_t mks);
 
 
 #endif

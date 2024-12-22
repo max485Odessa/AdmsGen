@@ -15,6 +15,19 @@ typedef void (*cb_reset) (void);
 }
 
 
+float calculate_herz_from_mks (uint32_t mks)
+{
+	float rv = 0;
+	if (mks)
+		{
+		double val = mks;
+		val *= 0.000001;
+		rv = 1.0 / val;
+		}
+	return rv;
+}
+
+
 uint32_t GN_CRC32 (void *ldata, uint32_t size)
 {
 const uint32_t one_sig = 0x724169A3;
@@ -133,8 +146,10 @@ unsigned long SwapLong (unsigned long dat)
 
 
 
-char *CopyMemorySDC (char *lpSour, char *lpDest, unsigned int sizes)
+char *CopyMemorySDC (void *s, void *d, uint32_t sizes)
 {
+char *lpSour = (char*)s;
+char *lpDest = (char*)d;
 if (lpSour && lpDest && sizes)
     {
     while (sizes)

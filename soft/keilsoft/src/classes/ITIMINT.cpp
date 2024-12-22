@@ -1,5 +1,5 @@
 #include "ITIMINT.h"
-
+#include "TGlobalISR.h"
 
 
 static const uint8_t isrnumbarr[ESYSTIM_ENDENUM] = {TIM1_CC_IRQn, TIM2_IRQn, TIM3_IRQn, TIM4_IRQn, TIM5_IRQn, 0, 0, 0, 0, 0, 0, 0};
@@ -73,7 +73,7 @@ ESYSTIM TTIM_MKS_USER_A::get_tim ()
 
 void TTIM_MKS_USER_A::timer_init (uint32_t period, uint32_t hz)
 {
-TIM_OC_InitTypeDef   sConfig;
+//TIM_OC_InitTypeDef   sConfig;
 uint32_t uwPrescalerValue = (uint32_t) ((SystemCoreClock / hz) - 1);
 hard_tim_clock_enable (tim_ix);
   
@@ -81,7 +81,10 @@ hard_tim_clock_enable (tim_ix);
   TimHandle.Init.Prescaler = uwPrescalerValue;
   TimHandle.Init.ClockDivision = 0;
   TimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
+	TimHandle.Init.RepetitionCounter = 0;
+	//HAL_TIM_Base_Start_IT(&TimHandle);
 	HAL_TIM_OC_Init (&TimHandle);
+	//HAL_TIM_OC_Init (&TimHandle);
 	//HAL_TIM_Base_Start (&TimHandle);
 }
 
@@ -157,35 +160,39 @@ void TTIM_MKS_ISR::set_tim_cb (EPWMCHNL c, ITIMCB *cb)
 // isr context executed
 void TTIM_MKS_ISR::isr_tim ()
 {
-	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC1) !=RESET)
+	//TGLOBISR::disable ();
+	uint32_t sr = TimHandle.Instance->SR;
+	//if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC1) !=RESET)
+	if(sr & TIM_IT_CC1)
     {
 			if (f_one_short[EPWMCHNL_PWM1]) enable_timer_oc (EPWMCHNL_PWM1, false);
-			callback_user[tim_ix]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM1);
+			if (callback_user[EPWMCHNL_PWM1]) callback_user[EPWMCHNL_PWM1]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM1);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC1);
 		}
-	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC2) !=RESET)
+	if(sr & TIM_IT_CC2)
     {
 			if (f_one_short[EPWMCHNL_PWM2]) enable_timer_oc (EPWMCHNL_PWM2, false);
-			callback_user[tim_ix]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM2);
+			if (callback_user[EPWMCHNL_PWM2])callback_user[EPWMCHNL_PWM2]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM2);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC2);
 		}
-	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC3) !=RESET)
+	if(sr & TIM_IT_CC3)
     {
 			if (f_one_short[EPWMCHNL_PWM3]) enable_timer_oc (EPWMCHNL_PWM3, false);
-			callback_user[tim_ix]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM3);
+			if (callback_user[EPWMCHNL_PWM3])callback_user[EPWMCHNL_PWM3]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM3);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC3);
 		}
-	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_CC4) !=RESET)
+	if(sr & TIM_IT_CC4)
     {
 			if (f_one_short[EPWMCHNL_PWM4]) enable_timer_oc (EPWMCHNL_PWM4, false);
-			callback_user[tim_ix]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM4);
+			if (callback_user[EPWMCHNL_PWM4])callback_user[EPWMCHNL_PWM4]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_PWM4);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_CC4);
 		}
-	if(__HAL_TIM_GET_FLAG (&TimHandle, TIM_IT_UPDATE) !=RESET)
+	if(sr & TIM_IT_UPDATE)
     {
-			callback_user[tim_ix]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_UPDATE);
+			if (callback_user[EPWMCHNL_UPDATE])callback_user[EPWMCHNL_UPDATE]->tim_comp_cb_user_isr (tim_ix, EPWMCHNL_UPDATE);
 		 __HAL_TIM_CLEAR_IT(&TimHandle, TIM_IT_UPDATE);
 		}
+	//TGLOBISR::enable ();
 }
 
 
@@ -196,11 +203,11 @@ void TTIM_MKS_ISR::enable_timer_isr (bool st)
 	IRQn_Type tp = (IRQn_Type)(isrnumbarr[tim_ix]);
 	if (st)
 		{
-		HAL_NVIC_EnableIRQ (tp);
+		if (tp)HAL_NVIC_EnableIRQ (tp);
 		}
 	else
 		{
-		HAL_NVIC_DisableIRQ (tp);
+		if (tp)HAL_NVIC_DisableIRQ (tp);
 		}
 }
 
@@ -235,22 +242,34 @@ void TTIM_MKS_ISR::enable_timer_oc (EPWMCHNL c, bool state)
 	if (c < EPWMCHNL_ENDENUM)
 		{
 		TIM_OC_InitTypeDef sConfig;
-
-		if (state)
+		if (c < EPWMCHNL_UPDATE)
 			{
+			if (state)
+				{
 
-			sConfig.OCMode  = TIM_OCMODE_ACTIVE;//TIM_OCMODE_FORCED_ACTIVE;//TIM_OCMODE_ACTIVE;//ocmode[c]; //TIM_OCMODE_PWM1;//TIM_OCMODE_ACTIVE;
-			sConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
+				sConfig.OCMode  = TIM_OCMODE_ACTIVE;//TIM_OCMODE_FORCED_ACTIVE;//TIM_OCMODE_ACTIVE;//ocmode[c]; //TIM_OCMODE_PWM1;//TIM_OCMODE_ACTIVE;
+				sConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
 
-			sConfig.Pulse = a_pwmvalue[c];  
-			HAL_TIM_OC_ConfigChannel (&TimHandle, &sConfig, chanarr[c]);
-			HAL_TIM_OC_Start_IT (&TimHandle, chanarr[c]);
+				sConfig.Pulse = a_pwmvalue[c];  
+				HAL_TIM_OC_ConfigChannel (&TimHandle, &sConfig, chanarr[c]);
+				HAL_TIM_OC_Start_IT (&TimHandle, chanarr[c]);
+				}
+			else
+				{
+				HAL_TIM_OC_Stop_IT (&TimHandle, chanarr[c]);
+				}
+			f_active_isr[c] = state;
 			}
 		else
 			{
-			HAL_TIM_OC_Stop_IT (&TimHandle, chanarr[c]);
+			if (c == EPWMCHNL_UPDATE)
+				{
+				f_active_isr[c] = state;
+					
+				HAL_TIM_Base_Start_IT(&TimHandle);
+				//__HAL_TIM_ENABLE_IT (&TimHandle, TIM_IT_UPDATE);
+				}
 			}
-		f_active_isr[c] = state;
 		}
 }
 

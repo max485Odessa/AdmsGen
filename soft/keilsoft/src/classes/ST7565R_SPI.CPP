@@ -260,7 +260,7 @@ bpr.lRam = (unsigned char*)DataBuf;
 bpr.sizes = sizeof(DataBuf);
 while (Indx < C_LCD_PAGE_AMOUNT)
 	{
-	sz = lCanv->CopyCanva_BLine (&bpr, Indx);
+	sz = lCanv->CopyCanva_BLine (&bpr, Indx, true);
 	if (sz)
 		{
 		Set_Page (Indx);
@@ -280,7 +280,7 @@ BUFPAR bpr;
 bpr.lRam = (unsigned char*)DataBuf;
 bpr.sizes = sizeof(DataBuf);
 
-	sz = lCanv->CopyCanva_BLine (&bpr, Indx);
+	sz = lCanv->CopyCanva_BLine (&bpr, Indx, true);
 	if (sz)
 		{
 		Set_Page (Indx);

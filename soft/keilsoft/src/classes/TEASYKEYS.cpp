@@ -12,7 +12,7 @@ TEASYKEYS::TEASYKEYS (S_GPIOPIN *p, uint8_t k_cnt) : c_pins_cnt (k_cnt)
 	while (ix < c_pins_cnt) 
 		{
 		pins[ix].keypin = p[ix];
-		_pin_low_init_in (&pins[ix].keypin, 1, EHRTGPIOSPEED_HI, EHRTGPIOPULL_NO);
+		_pin_low_init_in (&pins[ix].keypin, 1, EHRTGPIOSPEED_HI, EHRTGPIOPULL_UP);
 		clear_key (pins[ix]);
 		ix++;
 		}
@@ -32,9 +32,6 @@ void TEASYKEYS::clear_key (S_KEYSETS_T &kp)
 	kp.push_time = 0;
 	kp.messg = EJSTMSG_NONE;
 }
-
-
-
 
 
 

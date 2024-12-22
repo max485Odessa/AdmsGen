@@ -6,7 +6,8 @@
 typedef uint32_t utimer_t;
 
 
-#define C_SBCPP_PERIODIC 10
+#define C_SBCPP_PERIODIC_ISR 10
+#define C_SBCPP_PERIODIC_SYS 10
 #define C_MAXTIMCB_ISR 2
 #define C_MAXTIMCB 1
 #define C_MAXPPROC_ISR 1

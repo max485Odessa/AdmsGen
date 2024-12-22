@@ -20,7 +20,6 @@
 #endif
 
 
-
 #if (HRDCPU == 1)
 	#define C_HRDGPIOSPEED_LOW GPIO_SPEED_LOW
 	#define C_HRDGPIOSPEED_MID GPIO_SPEED_MEDIUM
@@ -52,9 +51,13 @@
 #endif
 
 
+
+enum E_GPIO_AF {E_GPIO_AF0, E_GPIO_AF1, E_GPIO_AF2, E_GPIO_AF3, E_GPIO_AF4, E_GPIO_AF5, E_GPIO_AF6,E_GPIO_AF7, E_GPIO_AF8, E_GPIO_AF9, E_GPIO_AF10, E_GPIO_AF11, E_GPIO_AF12, E_GPIO_AF13, E_GPIO_AF14, E_GPIO_AF15, E_GPIO_AF_ENDENUM};
+
 enum EHRTGPIOPULL {EHRTGPIOPULL_NO = C_HRDGPIO_NOPULL, EHRTGPIOPULL_UP = C_HRDGPIO_PULLUP, EHRTGPIOPULL_DOWN = C_HRDGPIO_PULLDW};
 enum EHRTGPIOSPEED {EHRTGPIOSPEED_LOW = C_HRDGPIOSPEED_LOW, EHRTGPIOSPEED_MID = C_HRDGPIOSPEED_MID, EHRTGPIOSPEED_HI = C_HRDGPIOSPEED_HI};
 enum ESYSTIM {ESYSTIM_TIM1 = 0, ESYSTIM_TIM2, ESYSTIM_TIM3, ESYSTIM_TIM4, ESYSTIM_TIM5, ESYSTIM_TIM6, ESYSTIM_TIM7, ESYSTIM_TIM8, ESYSTIM_TIM9, ESYSTIM_TIM10, ESYSTIM_TIM11, ESYSTIM_TIM12, ESYSTIM_ENDENUM};
+enum ESYSUART {ESYSUSART_1 = 0, ESYSUSART_2, ESYSUSART_3, ESYSUSART_4, ESYSUSART_5, ESYSTIM_UART6, ESYSUSART_ENDUNUM};
 enum EGPMD {EGPMD_OD, EGPMD_PP, EGPMD_IN, EGPMD_AIN, EGPMD_ENDENUM};
 enum EGPINTMOD {EGPINTMOD_RISING = 0, EGPINTMOD_FALLING = 1, EGPINTMOD_RISING_FALLING = 2, EGPINTMOD_ENDENUM};
 
@@ -92,6 +95,8 @@ void _pin_low_init_out_od_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin, EHRTGPIOSP
 #endif
 
 TIM_TypeDef *hard_get_tim (ESYSTIM t, bool *f_wdth_32);
+bool hard_tim_is_32bit (ESYSTIM tn);
+TIM_TypeDef *get_hard_tim (ESYSTIM tn);
 void hard_tim_clock_enable (ESYSTIM tn);
 void hard_usart_clock_enable (USART_TypeDef *p);
 void hard_gpio_clock_enable (GPIO_TypeDef *port);
@@ -104,8 +109,11 @@ void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md, EHRT
 void _pin_low_init_adc ( S_GPIOPIN *lp_pin, uint8_t cnt, EHRTGPIOSPEED sp );
 bool _pin_input ( S_GPIOPIN *lp_pin );
 void _pin_output ( S_GPIOPIN *lp_pin, bool val );
+
 #define _pin_set_to(x,y) _pin_output(x,y)
 #define _pin_get(x) _pin_input(x)
+
+
 
 #endif
 

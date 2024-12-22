@@ -320,7 +320,7 @@
             <OneElfS>1</OneElfS>
             <Strict>0</Strict>
             <EnumInt>0</EnumInt>
-            <PlainCh>1</PlainCh>
+            <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
             <wLevel>1</wLevel>
@@ -329,8 +329,8 @@
             <uC99>0</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
-            <v6Lang>0</v6Lang>
-            <v6LangP>0</v6LangP>
+            <v6Lang>6</v6Lang>
+            <v6LangP>7</v6LangP>
             <vShortEn>0</vShortEn>
             <vShortWch>0</vShortWch>
             <v6Lto>0</v6Lto>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F401xC,SBCPP,HSE_VALUE=25000000,HRDCPU=4</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\STM32F4xx_HAL_Driver\Inc;.\src\STM32F4xx_HAL_Driver;.\src\classes</IncludePath>
+              <IncludePath>.\src\STM32F4xx_HAL_Driver\Inc;.\src\STM32F4xx_HAL_Driver;.\src\classes;..\..\..\..\..\MPULIBS;..\..\..\..\..\MPULIBS\mpustring;..\..\..\..\..\MPULIBS\ledindikator</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -405,9 +405,9 @@
               <FilePath>.\src\classes\TCORE.cpp</FilePath>
             </File>
             <File>
-              <FileName>TPARAMCONTROL.cpp</FileName>
+              <FileName>TINA226.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\src\classes\TPARAMCONTROL.cpp</FilePath>
+              <FilePath>.\src\classes\TINA226.cpp</FilePath>
             </File>
           </Files>
         </Group>
@@ -550,11 +550,6 @@
               <FilePath>.\src\classes\hard_rut.cpp</FilePath>
             </File>
             <File>
-              <FileName>STMSTRING.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\src\classes\STMSTRING.cpp</FilePath>
-            </File>
-            <File>
               <FileName>SYSBIOS.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>.\src\classes\SYSBIOS.cpp</FilePath>
@@ -573,11 +568,6 @@
               <FileName>ST7565R_SPI.CPP</FileName>
               <FileType>8</FileType>
               <FilePath>.\src\classes\ST7565R_SPI.CPP</FilePath>
-            </File>
-            <File>
-              <FileName>LCD132x64.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\src\classes\LCD132x64.cpp</FilePath>
             </File>
             <File>
               <FileName>IEXTINT.cpp</FileName>
@@ -623,6 +613,36 @@
               <FileName>THALLDIG.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>.\src\classes\THALLDIG.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>TPIDMOTOR.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\src\classes\TPIDMOTOR.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>TPWM.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\src\classes\TPWM.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>TDRAWPARAM.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\TDRAWPARAM.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>TPARAMCONTROL.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\TPARAMCONTROL.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>STMSTRING.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\mpustring\STMSTRING.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>LCD132x64.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\ledindikator\LCD132x64.cpp</FilePath>
             </File>
           </Files>
         </Group>

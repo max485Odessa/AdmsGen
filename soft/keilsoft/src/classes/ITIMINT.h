@@ -21,7 +21,7 @@ class ITIMCB {
 
 
 class TTIM_MKS_USER_A {
-		void timer_init (uint32_t period, uint32_t hz);
+		void timer_init (uint32_t period, uint32_t hz_clk);
 		
 	protected:
 		const uint32_t c_value_period;

@@ -1,9 +1,9 @@
 #include "TAIN.h"
 
 
-
-static const uint32_t adc_chan[EAINCH_ENDENUM] = {ADC_CHANNEL_1, ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4, ADC_CHANNEL_5, ADC_CHANNEL_17, ADC_CHANNEL_18, ADC_CHANNEL_17};
-static const S_GPIOPIN adcpinsarr[EAINPIN_ENDENUM] = {{GPIOA, GPIO_PIN_1}, {GPIOA, GPIO_PIN_2}, {GPIOA, GPIO_PIN_3}, {GPIOA, GPIO_PIN_4}, {GPIOA, GPIO_PIN_5}};
+static const float mult_array[EAINCH_ENDENUM] = {192.4893618F, 6, 11, 1, 1, 1};
+static const uint32_t adc_chan[EAINCH_ENDENUM] = {ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4, ADC_CHANNEL_17, ADC_CHANNEL_18, ADC_CHANNEL_17};
+static const S_GPIOPIN adcpinsarr[EAINPIN_ENDENUM] = {{GPIOA, GPIO_PIN_2}, {GPIOA, GPIO_PIN_3}, {GPIOA, GPIO_PIN_4}};
 static ADC_HandleTypeDef AdcHandle;
 static __IO uint16_t uhADCxConvertedValue[EAINCH_ENDENUM];
 
@@ -22,7 +22,7 @@ TAIN::TAIN ()
   hdma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
   hdma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
   hdma_adc.Init.MemInc = DMA_MINC_ENABLE;
-  hdma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;		// DMA_PDATAALIGN_HALFWORD
+  hdma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
   hdma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
   hdma_adc.Init.Mode = DMA_CIRCULAR;
   hdma_adc.Init.Priority = DMA_PRIORITY_HIGH;
@@ -113,7 +113,7 @@ void TAIN::Task ()
 		uint8_t ix = 0;
 		while (ix < EAINCH_ENDENUM)
 			{
-			voltage[ix] = quant_value * uhADCxConvertedValue[ix]; 
+			voltage[ix] = (quant_value * uhADCxConvertedValue[ix]) * mult_array[ix]; 
 			ix++;
 			}
 		relax_timer.set (20);

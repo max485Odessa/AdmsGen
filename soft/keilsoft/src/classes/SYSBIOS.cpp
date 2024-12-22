@@ -5,8 +5,14 @@
 namespace SYSBIOS {
 	
 #ifdef SBCPP
-	s_evntdata_cb_t Periodic::evnt_arr_per[C_SBCPP_PERIODIC];
-	uint32_t Periodic::evdatacb_cnt = 0;
+	#ifdef C_SBCPP_PERIODIC_SYS
+		TCBHANDLE TTMEXECUTE::cb_obj_arr_sys[C_SBCPP_PERIODIC_SYS];
+		uint16_t TTMEXECUTE::evdatacb_cnt_sys = 0;
+	#endif
+	#ifdef C_SBCPP_PERIODIC_ISR
+		TCBHANDLE TTMEXECUTE::cb_obj_arr_isr[C_SBCPP_PERIODIC_ISR];
+		uint16_t TTMEXECUTE::evdatacb_cnt_isr = 0;
+	#endif
 #endif
 	
 volatile unsigned long TickCount_Timer = 0;
@@ -300,6 +306,67 @@ return rv;
 }
 
 
+#ifdef SBCPP
+
+
+TCBHANDLE *TCBMANAGER::create_cb_slot (bool f_isr)
+{
+TCBHANDLE *rv = 0;
+TCBHANDLE *base;
+uint32_t c_amoumt_max;
+uint16_t *cur_ix;
+if (f_isr)
+	{
+	base = cb_obj_arr_isr;
+	c_amoumt_max = C_SBCPP_PERIODIC_ISR;
+	cur_ix = &evdatacb_cnt_isr;
+	}
+else
+	{
+	base = cb_obj_arr_sys;
+	c_amoumt_max = C_SBCPP_PERIODIC_SYS;
+	cur_ix = &evdatacb_cnt_sys;
+	}
+
+if (c_amoumt_max > *cur_ix)
+	{
+	rv = &base[*cur_ix];
+	rv->Stop ();
+	(*cur_ix)++;
+	}
+return rv;
+}
+
+
+/*
+char addcb_others (s_tagdata_cb_t *list, uint32_t ix, uint32_t c_max_n, TimerCB *cbobj, uint32_t id, EPERCBMODE md, uint32_t period, uint32_t rep_cnt)
+{
+	char rv = 0;
+	if (c_max_n > ix) {
+		list[ix].obj = cbobj;
+		list[ix].state = md;
+		list[ix].cb_id = id;
+		list[ix].c_period = period;
+		list[ix].l_period = period;	
+		list[ix].repeate_counter = rep_cnt;
+		rv = 1;
+		}
+	return rv;
+}
+*/
+
+TCBHANDLE *CreateCB_ISR ()
+{
+	return TCBMANAGER::create_cb_slot (true);
+}
+
+
+TCBHANDLE *CreateCB_SYS ()
+{
+	return TCBMANAGER::create_cb_slot (false);
+}
+
+#endif
 
 
 char AddPeriodicThread (CALLBK_CLASS_STATIC *lpParam, utimer_t DelayTime)
@@ -631,6 +698,107 @@ if (!F_BlockPerThreCalls)
 }
 
 
+#ifdef SBCPP
+
+
+void TTMEXECUTE::exec (TCBHANDLE *base, uint32_t rcnt, uint32_t dltms)
+{
+uint32_t ix = 0;
+uint32_t lix = rcnt;
+TCBHEXEC *tag;
+while (ix < lix)
+	{
+	tag = &base[ix];
+
+	if (tag->data.state != EPERCBMODE_STOP)
+		{
+		if (tag->data.c_period) 
+			{
+			if (tag->data.l_period > dltms)
+				{
+				tag->data.l_period -= dltms;
+				}
+			else
+				{
+				tag->data.obj->timer_cb (tag->data.cb_id);
+				tag->data.l_period = tag->data.c_period;
+				if (tag->data.state == EPERCBMODE_REPEATE)
+					{
+					if (tag->data.repeate_counter) tag->data.repeate_counter--;
+					if (!tag->data.repeate_counter) tag->data.state = EPERCBMODE_STOP;
+					}
+				}
+			}
+		else
+			{
+			tag->data.state = EPERCBMODE_STOP;
+			}
+		}
+	ix++;
+	}
+}
+
+
+
+#ifdef C_SBCPP_PERIODIC_ISR
+void TTMEXECUTE::execute_cb_isr (uint32_t dltms)
+{
+	exec (cb_obj_arr_isr, evdatacb_cnt_isr, dltms);
+}
+#endif
+
+
+
+#ifdef C_SBCPP_PERIODIC_SYS
+void TTMEXECUTE::execute_cb_sys (uint32_t dltms)
+{
+	exec (cb_obj_arr_sys, evdatacb_cnt_sys, dltms);
+}
+#endif
+
+
+
+
+/*
+static void PeriodicEvent_execute (s_tagdata_cb_t *list, uint32_t cnt, uint32_t dltms)
+{
+uint32_t ix = 0;
+uint32_t lix = cnt;
+s_tagdata_cb_t *tag;
+while (ix < lix)
+	{
+	tag = &list[ix];
+
+	if (tag->state != EPERCBMODE_STOP)
+		{
+		if (tag->c_period) 
+			{
+			if (tag->l_period > dltms)
+				{
+				tag->l_period -= dltms;
+				}
+			else
+				{
+				tag->obj->timer_cb (tag->cb_id);
+				tag->l_period = tag->c_period;
+				if (tag->state == EPERCBMODE_REPEATE)
+					{
+					if (tag->repeate_counter) tag->repeate_counter--;
+					if (!tag->repeate_counter) tag->state = EPERCBMODE_STOP;
+					}
+				}
+			}
+		else
+			{
+			tag->state = EPERCBMODE_STOP;
+			}
+		}
+	ix++;
+	}
+}
+*/
+#endif
+
 
 
 
@@ -658,6 +826,10 @@ if (INX_PPROC_ISR)
 				}
 		}
 ExecutePeriodic_CBTimers_ISR_DLT (delt);
+	#ifdef SBCPP
+		TTMEXECUTE::execute_cb_isr (delt);
+		//PeriodicEvent_execute (isr_evdatacb_arr_per, isr_evdatacb_cnt, delt);
+	#endif
 TIMER_RUTINE_I_DLT (delt);
 TickCount_Timer += delt;
 }
@@ -710,7 +882,104 @@ while (true)
 }
 
 
+
 #ifdef SBCPP
+
+
+
+TCBHANDLE::TCBHANDLE ()
+{
+	data.obj = 0;
+	data.cb_id = 0;
+	data.state_prev = EPERCBMODE_STOP;
+	Stop ();
+}
+
+
+
+void TCBHANDLE::Stop ()
+{
+	data.state = EPERCBMODE_STOP;
+}
+
+
+
+void TCBHANDLE::Restart_period ()
+{
+	data.l_period = data.c_period;
+}
+
+
+
+void TCBHANDLE::Continue ()
+{
+	switch (data.state_prev)
+		{
+		case EPERCBMODE_PERIODIC:
+			{
+			data.state = EPERCBMODE_PERIODIC;
+			break;
+			}
+		case EPERCBMODE_REPEATE:
+			{
+			data.repeate_counter = data.repeate_counter_prev; 
+			data.state = EPERCBMODE_REPEATE;
+			break;
+			}
+		}
+	data.l_period = data.c_period;
+}
+
+
+
+void TCBHANDLE::Start_OneShot (uint32_t period)
+{
+	data.c_period = period;
+	data.l_period = period;
+	data.repeate_counter_prev = 1;
+	data.repeate_counter = 1;
+	data.state_prev = EPERCBMODE_REPEATE;
+	data.state = EPERCBMODE_REPEATE;
+}
+
+
+
+void TCBHANDLE::Start_Shots (uint32_t period, uint32_t rep_cnt)
+{
+	data.c_period = period;
+	data.l_period = period;
+	data.repeate_counter_prev = rep_cnt;
+	data.repeate_counter = rep_cnt;
+	data.state_prev = EPERCBMODE_REPEATE;
+	data.state = EPERCBMODE_REPEATE;
+}
+
+
+
+void TCBHANDLE::Start_Periodic (uint32_t period)
+{
+	data.c_period = period;
+	data.l_period = period;
+	data.repeate_counter_prev = 0;
+	data.repeate_counter = 0;
+	data.state_prev = EPERCBMODE_PERIODIC;
+	data.state = EPERCBMODE_PERIODIC;
+}
+
+
+
+void TCBHANDLE::Set_CB (TimerCB *cb)
+{
+	data.obj = cb;
+}
+
+
+
+void TCBHANDLE::Set_ID (uint32_t id)
+{
+	data.cb_id = id;
+}
+
 
 
 Timer::Timer ()
@@ -738,7 +1007,7 @@ void Timer::set (utimer_t v)
 	timer_data = v;
 }
 
-
+/*
 HPERIOD Periodic::create_timer_ev (Periodic *obj)
 {
 	HPERIOD rv = 0;
@@ -822,42 +1091,7 @@ s_evntdata_cb_t *Periodic::get_periodic_tag (uint32_t ix)
 	if (ix < evdatacb_cnt) rv = &evnt_arr_per[ix];
 	return rv;
 }
-
-
-static void PeriodicEvent_execute (uint32_t dltms)
-{
-uint32_t ix = 0;
-uint32_t lix = Periodic::get_periodic_cb_cnt ();
-s_evntdata_cb_t *tag;
-while (ix < lix)
-	{
-	tag = Periodic::get_periodic_tag (ix);
-	if (tag) 
-		{
-		if (tag->state != EPERCBMODE_STOP)
-			{
-			if (tag->c_period) 
-				{
-				if (tag->l_period > dltms)
-					{
-					tag->l_period -= dltms;
-					}
-				else
-					{
-					tag->obj->periodic_cb (tag);
-					tag->l_period = tag->c_period;
-					if (tag->state == EPERCBMODE_REPEATE)
-						{
-						if (tag->repeate_counter) tag->repeate_counter--;
-						if (!tag->repeate_counter) tag->state = EPERCBMODE_STOP;
-						}
-					}
-				}
-			}
-		}
-	ix++;
-	}
-}
+*/
 
 
 #endif
@@ -893,14 +1127,13 @@ if (DltT)
 		}
 	LastTicks = TickCount_Timer;
 	#ifdef SBCPP
-		PeriodicEvent_execute (DltT);
+		TTMEXECUTE::execute_cb_sys (DltT);
+		//PeriodicEvent_execute (sys_evdatacb_arr_per, sys_evdatacb_cnt, DltT);
 	#endif
 	TIMER_RUTINE_S (DltT);
 	ExecutePeriodic_CBTimers_dlt (DltT);
 	}
 }
-
-
 
 
 
