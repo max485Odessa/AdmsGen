@@ -40,8 +40,8 @@ void TPWMSCHAN::enable (bool v)
 uint32_t TPWMSCHAN::calculate_pwm (float val)
 {
 if (val > 1.0F) val = 1.0F;
-if (val < 1.0F) val = -1.0F;
-if (val < 0) val *= -1;
+if (val < -1.0F) val = 0;//-1.0F;
+//if (val < 0) val *= -1;
 float data = tim.period - 1;
 data *= val;
 return data;

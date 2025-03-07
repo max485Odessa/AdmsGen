@@ -228,6 +228,13 @@ void THALLDIG::tim_comp_cb_user_isr (ESYSTIM t, EPWMCHNL ch)
 
 void THALLDIG::setoffset (float angl)
 {
+	if (angl >= 360)
+		{
+		// 750 / 360 = 2.08333333333
+		float tslt = angl / 360.0F;
+		uint32_t cel = tslt;
+		angl = (tslt - cel) * 360.0F;
+		}
 	c_offset_angl = angl;
 }
 

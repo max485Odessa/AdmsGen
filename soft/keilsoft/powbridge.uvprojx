@@ -329,8 +329,8 @@
             <uC99>0</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
-            <v6Lang>6</v6Lang>
-            <v6LangP>7</v6LangP>
+            <v6Lang>0</v6Lang>
+            <v6LangP>0</v6LangP>
             <vShortEn>0</vShortEn>
             <vShortWch>0</vShortWch>
             <v6Lto>0</v6Lto>
@@ -408,6 +408,11 @@
               <FileName>TINA226.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>.\src\classes\TINA226.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>TCORE_PROC.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\src\classes\TCORE_PROC.cpp</FilePath>
             </File>
           </Files>
         </Group>

@@ -26,13 +26,15 @@ USED RESOURCES:
 static S_PWM_INIT_LIST_T pin_mot_pwm = {{GPIOB,GPIO_PIN_6},ETIMCH_1, E_GPIO_AF2};
 
 void SystemClockHSE_Config (void);
-static S_GPIOPIN pinphase_in_a = {GPIOB,GPIO_PIN_12};	// pb12, pb13, pb14
-static S_GPIOPIN pinphase_out_a = {GPIOA,GPIO_PIN_12};		// pb0, pb1, pb2
+static S_GPIOPIN pinphase_in_a = {GPIOB,GPIO_PIN_12};	
+static S_GPIOPIN pinphase_out_a = {GPIOC,GPIO_PIN_14};		
+//static S_GPIOPIN pinphase_out_a = {GPIOA,GPIO_PIN_12};	
+static S_GPIOPIN pin_xdc_en = {GPIOB,GPIO_PIN_13};		
 	
 static S_GPIOPIN pinsi2c_a[EARRI2CPIN_ENDENUM] = {{GPIOB,GPIO_PIN_3}/*scl*/, {GPIOB,GPIO_PIN_4}/*sda*/};
 static const S_GPIOPIN rawpins_keys[EKEYSID_ENDENUM] = {{GPIOB,GPIO_PIN_2/*right*/}, {GPIOB,GPIO_PIN_1/*left*/}, {GPIOB,GPIO_PIN_10/*select*/}, {GPIOB,GPIO_PIN_0/*menu*/}, \
 {GPIOB,GPIO_PIN_9/*onoff*/}};
-static const S_GPIOPIN rawpins_lcd[EST7565P_ENDENUM] = {/*EST7565P_CS*/{GPIOA,GPIO_PIN_11}, /*EST7565P_REST*/{GPIOA, GPIO_PIN_10}, /*EST7565P_RS*/{GPIOA, GPIO_PIN_9},\
+static const S_GPIOPIN rawpins_lcd[EST7565P_ENDENUM] = {/*EST7565P_CS*/{GPIOB,GPIO_PIN_14}, /*EST7565P_REST*/{GPIOA, GPIO_PIN_10}, /*EST7565P_RS*/{GPIOA, GPIO_PIN_9},\
 /*EST7565P_SCL*/ {GPIOA, GPIO_PIN_8}, /*EST7565P_SI*/{GPIOB, GPIO_PIN_15}};
 //static TCONTRECT *rectifier;
 static TST7565RSPI *lcd;
@@ -172,7 +174,7 @@ int main ()
 
 	ain = new TAIN ();
 	
-	core = new TCORERCT (dighall, &pinphase_out_a, canva, keys, memi2c, ain, cur_motor, cur_src24, motor_pid);
+	core = new TCORERCT (dighall, &pin_xdc_en, &pinphase_out_a, canva, keys, memi2c, ain, cur_motor, cur_src24, motor_pid);
 	
 	updline_cnt = C_LCD_PAGE_AMOUNT;
 	//static float freq;
@@ -180,10 +182,13 @@ int main ()
 		{
 		frendly_task ();
 		//freq = dighall->get_freq ();
-		if (core->is_lcd_update ()) 
+		if (!updline_cnt)
 			{
-			updline_cnt = C_LCD_PAGE_AMOUNT;
-			canva->fixed_scr ();
+			if (core->is_lcd_update ()) 
+				{
+				updline_cnt = C_LCD_PAGE_AMOUNT;
+				canva->fixed_scr ();
+				}
 			}
 		if (updline_cnt) {
 			lcd->RefreshAllDisplay_L (canva);

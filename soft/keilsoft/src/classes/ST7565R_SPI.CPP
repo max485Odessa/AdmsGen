@@ -8,7 +8,7 @@
 TST7565RSPI::TST7565RSPI (S_GPIOPIN *p)
 {
 	rawpins = p;
-	_pin_low_init_out_pp (rawpins, EST7565P_ENDENUM, EHRTGPIOSPEED_HI);
+	_pin_low_init_out_pp (rawpins, EST7565P_ENDENUM, EHRTGPIOSPEED_LOW);		// EHRTGPIOSPEED_HI
 }
 
 

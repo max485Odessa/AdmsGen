@@ -21,18 +21,18 @@
 
 enum EKEYSID {EKEYSID_RIGHT = 0, EKEYSID_LEFT, EKEYSID_SELECT, EKEYSID_MENU , EKEYSID_ONOFF, EKEYSID_ENDENUM};
 enum EPRMIX {\
-	EPRMIX_RECT_ENABLE = 0, /* on/off всей системы преобразования */ \
-	EPRMIX_MOTOR_SPEED = 1, /* номинальная скорость мотора в герцах */ \
-	EPRMIX_SPEED_START = 2, /* скорость начала работы системы */ \
-	EPRMIX_MOTOR_P = 3, /* настройка управления мотором */ \
-	EPRMIX_MOTOR_D = 4, /* настройка управления мотором */ \
-	EPRMIX_MOTOR_FREQ = 5, /* настройка управления мотором */ \
-	EPRMIX_R_ANGLE_ON = 6, EPRMIX_R_ANGLE_OFF = 7, /* настройка системы коммутации */ \
-	EPRMIX_MOTOR_N = 8, /* общее количество магнитов */ \
-	EPRMIX_VOLT_ON = 9, /* напряжение при котором разрешается преобразование */ \
-	EPRMIX_VOLT_OFF = 10, /* напряжение при котором запрещается преобразование */ \
-	
-  EPRMIX_ENDENUM = 11};
+	EPRMIX_AUTOSTART_ENABLE = 0, /* автостарт при включении питания */ \
+	EPRMIX_WORK_MOTOR_RPM , /* номинальная скорость мотора в герцах */ \
+	EPRMIX_START_SYS_RPM , /* скорость начала работы системы */ \
+	EPRMIX_MOTOR_P , /* настройка управления мотором */ \
+	EPRMIX_MOTOR_D , /* настройка управления мотором */ \
+	EPRMIX_R_ANGLE_ON , /* настройка системы коммутации */ \
+	EPRMIX_R_ANGLE_OFF , /* настройка системы коммутации */ \
+	EPRMIX_MAGNETS_N , /* общее количество магнитов */ \
+	EPRMIX_VOLT_ON , /* напряжение при котором разрешается преобразование */ \
+	EPRMIX_VOLT_OFF , /* напряжение при котором запрещается преобразование */ \
+	EPRMIX_R_ANGLE_OFFSET, /* угловое смещение относительно датчика хола (в пределах от 0 до 359.5 градусов)  */ \
+  EPRMIX_ENDENUM };
 
 
 
@@ -52,15 +52,18 @@ typedef struct {
 
 
 
-#define C_GRAPHICS_TIMS_AMOUNT 10
+#define C_GRAPHICS_TIMS_AMOUNT 12
 
 // графические таймера визуального обновления величины
-enum EGTIM_W_MAIN {EGTIM_W_MAIN_STATE = 0, EGTIM_W_MAIN_RPM, EGTIM_W_MAIN_SRC_320V, EGTIM_W_MAIN_DST24_V, EGTIM_W_MAIN_MOT_V, EGTIM_W_MAIN_BAT12V, EGTIM_W_MAIN_MOT_A, EGTIM_W_MAIN_DST24_A, EGTIM_W_MAIN_ENDENUM};
-
+enum EGTIM_W_MAIN {EGTIM_W_MAIN_STATE = 0, EGTIM_W_MAIN_RPM, EGTIM_W_MAIN_SRC_320V, EGTIM_W_MAIN_DST24_V, EGTIM_W_MAIN_MOT_V, EGTIM_W_MAIN_BAT12V, EGTIM_W_MAIN_MOT_A, EGTIM_W_MAIN_DST24_A, EGTIM_W_MAIN_PULSES, EGTIM_W_MAIN_OPTO, EGTIM_W_ERROR_PID, EGTIM_W_MAIN_ENDENUM};
 enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_PARAM_LIST, EPAGE_ENDENUM};
+enum ECOREPDC {ECOREPDC_TIMS = 0, ECOREPDC_PROCESS, ECOREPDC_ENDENUM};
 
+#define C_MINSRC_VOLTAGE 150.0F
+#define C_MAXSRC_VOLTAGE 400.0F
+#define C_MINIMAL_ANGLE_WIDEBAND 1.0F
 
-	class TCORERCT: public TFFC, public IFHALLPHASECB, public SYSBIOS::TimerCB {
+class TCORERCT: public TFFC, public IFHALLPHASECB, public SYSBIOS::TimerCB {
 		uint8_t gui_item_param_height ();
 		uint8_t border_updown_height ();
 		uint8_t gui_dislp_item_cnt ();
@@ -86,6 +89,22 @@ enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_PARAM_LIST, EPAG
 		SYSBIOS::TCBHANDLE *gr_timer;
 		uint32_t grph_tims[C_GRAPHICS_TIMS_AMOUNT];	
 		uint8_t max_gr_tims;
+		
+		void ptocess_isr_task ();
+		SYSBIOS::TCBHANDLE *proc_cb_isr_task;
+		
+		uint32_t seting_work_rpm;
+		uint32_t seting_start_sys_rpm;
+		float seting_motor_P;
+		float seting_motor_I;
+		float seting_angle_pulse_on;
+		float seting_angle_pulse_off;
+		float seting_angle_offset;
+		uint32_t seting_magnets_pair;
+		float seting_sys_voltage_on;
+		float seting_sys_voltage_off;
+		
+		void param_angles_aply ();
 	
 	protected:
 		virtual void Task () override;
@@ -100,9 +119,15 @@ enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_PARAM_LIST, EPAG
 		TGRAPHPARAM *ptxt_v12bat_v;	// bat
 		TGRAPHPARAM *ptxt_mot_v;	// mot
 		TGRAPHPARAM *ptxt_mot_a;	// mot
-		
+		TGRAPHPARAM *ptxt_pulses;	// phase pulses
+		TGRAPHPARAM *ptxt_optocoupler;	// optocoupler
+		TGRAPHPARAM *ptxt_pdenum;	// optocoupler
 		
 		bool f_system_state;
+		bool f_pulses_state;
+		bool f_optocoupler;
+	
+		uint8_t pd_state;
 
 		//void draw_param (short x, short y, TGRAPHPARAM *p);
 	
@@ -143,11 +168,16 @@ enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_PARAM_LIST, EPAG
 		void draw_paramedit_page (long prm_ix);
 		void draw_main_screens ();
 
-		void params_aply ();
+		void params_aply (EPRMIX ix);
+		void all_params_aply ();
+		
 		S_GPIOPIN *c_pin_out;
+		S_GPIOPIN *c_pin_xdc_opto_en;
+		
+		void xdc_optocoupler_en (bool v);
 		
 	public:
-		TCORERCT (THALLDIG *rectifier, S_GPIOPIN *c_pout, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m, TAIN *ain, TTINA226 *vc_mr, TTINA226 *vc_s, TPIDPWM *mot);
+		TCORERCT (THALLDIG *rectifier, S_GPIOPIN *sdcact, S_GPIOPIN *c_pout, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m, TAIN *ain, TTINA226 *vc_mr, TTINA226 *vc_s, TPIDPWM *mot);
 		bool is_lcd_update ();
 		void set_page (EPAGE p);
 };

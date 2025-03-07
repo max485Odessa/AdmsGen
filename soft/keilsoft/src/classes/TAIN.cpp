@@ -1,9 +1,9 @@
 #include "TAIN.h"
 
 
-static const float mult_array[EAINCH_ENDENUM] = {192.4893618F, 6, 11, 1, 1, 1};
-static const uint32_t adc_chan[EAINCH_ENDENUM] = {ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4, ADC_CHANNEL_17, ADC_CHANNEL_18, ADC_CHANNEL_17};
-static const S_GPIOPIN adcpinsarr[EAINPIN_ENDENUM] = {{GPIOA, GPIO_PIN_2}, {GPIOA, GPIO_PIN_3}, {GPIOA, GPIO_PIN_4}};
+static const float mult_array[EAINCH_ENDENUM] = {192.4893618F, 6, 11, 1};
+static const uint32_t adc_chan[EAINCH_ENDENUM] = {ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_5, ADC_CHANNEL_17};
+static const S_GPIOPIN adcpinsarr[EAINPIN_ENDENUM] = {{GPIOA, GPIO_PIN_2}, {GPIOA, GPIO_PIN_3}, {GPIOA, GPIO_PIN_5}};
 static ADC_HandleTypeDef AdcHandle;
 static __IO uint16_t uhADCxConvertedValue[EAINCH_ENDENUM];
 
@@ -31,6 +31,7 @@ TAIN::TAIN ()
   hdma_adc.Init.MemBurst = DMA_MBURST_SINGLE;
   hdma_adc.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
+
   HAL_DMA_Init(&hdma_adc);
 
   __HAL_LINKDMA (&AdcHandle, DMA_Handle, hdma_adc);
@@ -38,12 +39,12 @@ TAIN::TAIN ()
   AdcHandle.Instance                   = ADC1;
   AdcHandle.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV4;
   AdcHandle.Init.Resolution            = ADC_RESOLUTION_12B;
-  AdcHandle.Init.ScanConvMode          = ENABLE;//DISABLE;                       /* Sequencer disabled (ADC conversion on only 1 channel: channel set on rank 1) */
+  AdcHandle.Init.ScanConvMode          = ENABLE;                       /* Sequencer disabled (ADC conversion on only 1 channel: channel set on rank 1) */
   AdcHandle.Init.ContinuousConvMode    = ENABLE;                        /* Continuous mode disabled to have only 1 conversion at each conversion trig */
   AdcHandle.Init.DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because sequencer is disabled */
   AdcHandle.Init.NbrOfDiscConversion   = 0;
   AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;        /* Conversion start trigged at each external event */
-  AdcHandle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;//ADC_EXTERNALTRIGCONV_T1_CC1;
+  AdcHandle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;//ADC_SOFTWARE_START;//ADC_EXTERNALTRIGCONV_T1_CC1;
   AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
   AdcHandle.Init.NbrOfConversion       = EAINCH_ENDENUM;
   AdcHandle.Init.DMAContinuousRequests = ENABLE;
@@ -58,7 +59,7 @@ TAIN::TAIN ()
 	while (ix < EAINCH_ENDENUM)
 		{
 		sConfig.Channel      = adc_chan[ix];
-		sConfig.Rank         = ix+1;
+		sConfig.Rank         = ix + 1;
 		HAL_ADC_ConfigChannel (&AdcHandle, &sConfig);	
 		ix++;
 		}
@@ -77,12 +78,9 @@ uint16_t *TAIN::adr_voltage_raw (EAINPIN ch)
 
 
 
-
 float TAIN::quant_calc ()
 {
-	uint16_t raw16 = uhADCxConvertedValue[EAINCH_VREF];
-	raw16 += uhADCxConvertedValue[EAINCH_VREF2];
-	raw16 /= 2;
+	uint16_t raw16 = uhADCxConvertedValue[EAINCH_VREF] & 0x0FFF;
 	return 1.20F / raw16;
 }
 
@@ -113,7 +111,7 @@ void TAIN::Task ()
 		uint8_t ix = 0;
 		while (ix < EAINCH_ENDENUM)
 			{
-			voltage[ix] = (quant_value * uhADCxConvertedValue[ix]) * mult_array[ix]; 
+			voltage[ix] = (quant_value * (uhADCxConvertedValue[ix]&  0x0FFF)) * mult_array[ix]; 
 			ix++;
 			}
 		relax_timer.set (20);
