@@ -23,7 +23,7 @@ USED RESOURCES:
 	
 */
 
-static S_PWM_INIT_LIST_T pin_mot_pwm = {{GPIOB,GPIO_PIN_6},ETIMCH_1, E_GPIO_AF2};
+static S_PWM_INIT_LIST_T pin_mot_pwm = {{GPIOB,GPIO_PIN_6},ETIMCH_1, false, E_GPIO_AF2};
 
 void SystemClockHSE_Config (void);
 static S_GPIOPIN pinphase_in_a = {GPIOB,GPIO_PIN_12};	

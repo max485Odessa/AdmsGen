@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F401xC,SBCPP,HSE_VALUE=25000000,HRDCPU=4</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\STM32F4xx_HAL_Driver\Inc;.\src\STM32F4xx_HAL_Driver;.\src\classes;..\..\..\..\..\MPULIBS;..\..\..\..\..\MPULIBS\mpustring;..\..\..\..\..\MPULIBS\ledindikator</IncludePath>
+              <IncludePath>.\src\STM32F4xx_HAL_Driver\Inc;.\src\STM32F4xx_HAL_Driver;.\src\classes;..\..\..\..\..\MPULIBS;..\..\..\..\..\MPULIBS\mpustring;..\..\..\..\..\MPULIBS\ledindikator;..\..\..\..\..\MPULIBS\pwm;..\..\..\..\..\MPULIBS\ISTMCLASS</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -615,21 +615,6 @@
               <FilePath>.\src\classes\TGLOBALISR.cpp</FilePath>
             </File>
             <File>
-              <FileName>THALLDIG.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\src\classes\THALLDIG.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>TPIDMOTOR.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\src\classes\TPIDMOTOR.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>TPWM.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\src\classes\TPWM.cpp</FilePath>
-            </File>
-            <File>
               <FileName>TDRAWPARAM.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\..\..\..\..\MPULIBS\TDRAWPARAM.cpp</FilePath>
@@ -648,6 +633,26 @@
               <FileName>LCD132x64.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\..\..\..\..\MPULIBS\ledindikator\LCD132x64.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>TPWM.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\pwm\TPWM.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>THBRIDGE.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\ISTMCLASS\THBRIDGE.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>TPIDMOTOR.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\ISTMCLASS\TPIDMOTOR.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>THALLDIG.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\..\..\..\MPULIBS\ISTMCLASS\THALLDIG.cpp</FilePath>
             </File>
           </Files>
         </Group>
