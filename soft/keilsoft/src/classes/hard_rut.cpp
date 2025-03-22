@@ -291,6 +291,87 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 
 
 
+void hard_usart_clock_disable (USART_TypeDef *p)
+{
+	do	{
+			#ifdef USART1
+			if (p == USART1)
+				{
+				if (cur_clock_state_uart[ESYSUSART_1])
+					{
+					__HAL_RCC_USART1_CLK_DISABLE (); 
+					cur_clock_state_uart[ESYSUSART_1] = false;
+					}
+				break;
+				}
+			#endif
+
+			#ifdef USART2
+			if (p == USART2)
+				{
+				if (cur_clock_state_uart[ESYSUSART_2])
+					{
+					__HAL_RCC_USART2_CLK_DISABLE ();
+					cur_clock_state_uart[ESYSUSART_2] = false;
+					}
+				break;
+				}
+			#endif
+
+			#ifdef USART3
+			if (p == USART3)
+				{
+				if (cur_clock_state_uart[ESYSUSART_3])
+					{
+					__HAL_RCC_USART3_CLK_DISABLE ();
+					cur_clock_state_uart[ESYSUSART_3] = false;
+					}
+				break;
+				}
+			#endif
+
+			#ifdef UART4
+			if (p == UART4)
+				{
+				if (cur_clock_state_uart[ESYSUSART_4])
+					{
+					__HAL_RCC_UART4_CLK_DISABLE ();
+					cur_clock_state_uart[ESYSUSART_4] = false;
+					}
+				break;
+				}
+			#endif
+
+			#ifdef UART5
+			if (p == UART5)
+				{
+				if (cur_clock_state_uart[ESYSUSART_5])
+					{
+					__HAL_RCC_UART5_CLK_DISABLE ();
+					cur_clock_state_uart[ESYSUSART_5] = false;
+					}
+				break;
+				}
+			#endif
+
+			#ifdef USART6
+			if (p == USART6)
+				{
+				if (cur_clock_state_uart[ESYSUSART_6])
+					{
+					__HAL_RCC_USART6_CLK_DISABLE ();
+					cur_clock_state_uart[ESYSUSART_6] = false;
+					}
+				break;
+				}
+			#endif
+			} while (false);
+}
+
+
+
+
+
 static void hard_gpio_init_raw (GPIO_InitTypeDef *gpio, S_GPIOPIN *inarr, unsigned short cnt)
 {
 	while (cnt)
@@ -362,6 +443,20 @@ void _pin_low_init_out_od_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin, EHRTGPIOSP
 	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 		GPIO_InitStructure.Alternate = af_codemux;
 	#endif
+		GPIO_InitStructure.Pin = lp_pin->pin;
+		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
+}
+
+
+
+void _pin_low_init_in_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin )
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+		hard_gpio_clock_enable (lp_pin->port);
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_MEDIUM;//GPIO_SPEED_FREQ_LOW;// GPIO_SPEED_FREQ_MEDIUM;
+		GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;//GPIO_MODE_INPUT;//GPIO_MODE_AF_PP;
+		GPIO_InitStructure.Pull = GPIO_PULLUP;
+		GPIO_InitStructure.Alternate = af_codemux;
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 }
