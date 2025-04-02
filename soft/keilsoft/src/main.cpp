@@ -23,7 +23,8 @@ USED RESOURCES:
 	
 */
 
-static S_PWM_INIT_LIST_T pin_mot_pwm = {{GPIOB,GPIO_PIN_6},ETIMCH_1, false, E_GPIO_AF2};
+//static S_PWM_INIT_LIST_T pin_mot_pwm = {{GPIOB,GPIO_PIN_6},ETIMCH_1, false, E_GPIO_AF2};
+static S_HBRIDGE_INIT_LIST_T pins_bridge = {GPIOB,GPIO_PIN_6,ETIMCH_1, false, E_GPIO_AF2, GPIOB,GPIO_PIN_7,ETIMCH_2, false, E_GPIO_AF2};
 
 void SystemClockHSE_Config (void);
 static S_GPIOPIN pinphase_in_a = {GPIOB,GPIO_PIN_12};	
@@ -48,11 +49,8 @@ static TAIN *ain;
 static TEXTINT_ISR *extint_obj;
 static TTIM_MKS_ISR *timisr_obj;
 static TTIM_MKS_ISR *timsystem_obj;
-static THALLDIG *dighall;
-static TTINA226 *cur_motor;
-static TTINA226 *cur_src24;
+static THBRIDGE *h_bridge;
 static TPWM *pwm;
-static TPIDPWM *motor_pid;
 //static TPWMIMPL *pwm;
 	
 #ifdef __cplusplus
@@ -150,8 +148,7 @@ int main ()
 	busi2c = new TI2CIFACE (pinsi2c_a, 50);
 	memi2c = new TM24C16 (busi2c, 0);
 	
-	cur_motor = new TTINA226 (0, busi2c, 0.02F);	// (A1)gnd, (A0)gnd
-	cur_src24 = new TTINA226 (1, busi2c, 0.02F);	// (A1)gnd, (A0)vs
+
 
 	
 	canva = new TLCDCANVABW ();
@@ -159,22 +156,17 @@ int main ()
 	lcd = new TST7565RSPI (const_cast<S_GPIOPIN*>(rawpins_lcd));
 	lcd->LCD_init ();
 	
-	pwm = new TPWM (ESYSTIM_TIM4, 1000, 1000000, &pin_mot_pwm, 1);
-	motor_pid = new TPIDPWM (pwm->getChanel (pin_mot_pwm.ch));
+	//pwm = new TPWM (ESYSTIM_TIM4, 1000, 1000000, &pin_mot_pwm, 1);
+
 	
 	extint_obj = new TEXTINT_ISR (&pinphase_in_a, EGPINTMOD_RISING);
 	timisr_obj = new TTIM_MKS_ISR (ESYSTIM_TIM2, 0xFFFFFFFF, 1000000);
 
-	dighall = new THALLDIG (timisr_obj, extint_obj, EPWMCHNL_PWM2, 4, 5);
-	dighall->enable (true);
-	dighall->set_sync_cb (motor_pid);
-
-	
-	extint_obj->set_cb (dighall);
 
 	ain = new TAIN ();
+	h_bridge = new THBRIDGE (ESYSTIM_TIM4, 1000, 1000000, const_cast<S_HBRIDGE_INIT_LIST_T*>(&pins_bridge));
 	
-	core = new TCORERCT (dighall, &pin_xdc_en, &pinphase_out_a, canva, keys, memi2c, ain, cur_motor, cur_src24, motor_pid);
+	core = new TCORERCT (canva, keys, memi2c, ain, h_bridge);
 	
 	updline_cnt = C_LCD_PAGE_AMOUNT;
 	//static float freq;

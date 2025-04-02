@@ -16,7 +16,6 @@ static const char *txt_V = "V";
 static const char *txt_A = "A";
 static const char *txt_pulses_on[2] = {"[*]", "[ ]"};
 static const char *txt_pulses = "P";
-
 static const char *txt_opto_on[2] = {"[*]", "[ ]"};
 static const char *txt_opto = "O";
 static const char *txt_pd = "PD:";
@@ -24,56 +23,38 @@ static const char *txt_pidenum[EPIDSTATE_ENDENUM] = {"OFF", "STAB", "INC", "DEC"
 
 //static const float c_angle_step_change = 0.5;
  static S_MVPARAM_U32_T param_rectifier_enable = {"autostart", MAV_PARAM_TYPE_UINT32, 0, 0, 1, 0, 1};	// автостарт по включению питания
- static S_MVPARAM_U32_T param_work_rpm = {"rpm.work", MAV_PARAM_TYPE_UINT32, 500, 500, 3000, 500, 10};	// номинальные обороты системы в rpm
- static S_MVPARAM_U32_T param_start_rpm = {"rpm.start", MAV_PARAM_TYPE_UINT32, 300, 300, 3000, 300, 10};
- static S_MVPARAM_FLOAT_T param_motor_P = {"motor.P", MAV_PARAM_TYPE_REAL32, 0, 0, 10000, 1, 0.01, 2};
- static S_MVPARAM_FLOAT_T param_motor_D = {"motor.D", MAV_PARAM_TYPE_REAL32, 0, 0, 10000, 1, 0.01, 2};
- //static S_MVPARAM_U32_T param_motor_freq = {"motor.freq", MAV_PARAM_TYPE_UINT32, 0, 0, 1, 0, 1};
- static S_MVPARAM_FLOAT_T param_r_angle_on = {"angl.on", MAV_PARAM_TYPE_REAL32,  88, 0, 180, 50, 0.2F, 1};
- static S_MVPARAM_FLOAT_T param_r_angle_off = {"angl.off", MAV_PARAM_TYPE_REAL32,  90, 0, 180, 90, 0.2F, 1};
- static S_MVPARAM_U32_T param_magnets_cnt = {"magnt.cnt", MAV_PARAM_TYPE_UINT32, 0, 2, 200, 10, 2};
- static S_MVPARAM_FLOAT_T param_volt_start = {"volt.on", MAV_PARAM_TYPE_REAL32, C_MINSRC_VOLTAGE, C_MINSRC_VOLTAGE, C_MAXSRC_VOLTAGE, C_MINSRC_VOLTAGE, 2, 1};
- static S_MVPARAM_FLOAT_T param_volt_stop = {"volt.off" , MAV_PARAM_TYPE_REAL32, C_MAXSRC_VOLTAGE, C_MINSRC_VOLTAGE, C_MAXSRC_VOLTAGE, C_MAXSRC_VOLTAGE, 2, 1};
- static S_MVPARAM_FLOAT_T param_angl_offset = {"angl.ofset" , MAV_PARAM_TYPE_REAL32, 0, 0, 359.5, 0, 0.1, 1};
+ static S_MVPARAM_U32_T param_freq = {"freq_01us", MAV_PARAM_TYPE_UINT32, 500, 500, 3000, 500, 1};	// номинальные обороты системы в rpm
+ static S_MVPARAM_U32_T param_width = {"width_01us", MAV_PARAM_TYPE_UINT32, 300, 300, 3000, 300, 1};
+
  
 
 
 
-static const S_MVPARAM_HDR_T *curlist[EPRMIX_ENDENUM] = {(S_MVPARAM_HDR_T*)&param_rectifier_enable, (S_MVPARAM_HDR_T*)&param_work_rpm, (S_MVPARAM_HDR_T*)&param_start_rpm, \
-(S_MVPARAM_HDR_T*)&param_motor_P, (S_MVPARAM_HDR_T*)&param_motor_D, \
-(S_MVPARAM_HDR_T*)&param_r_angle_on, (S_MVPARAM_HDR_T*)&param_r_angle_off, (S_MVPARAM_HDR_T*)&param_magnets_cnt, (S_MVPARAM_HDR_T*)&param_volt_start, \
-(S_MVPARAM_HDR_T*)&param_volt_stop, (S_MVPARAM_HDR_T*)&param_angl_offset};
+static const S_MVPARAM_HDR_T *curlist[EPRMIX_ENDENUM] = {(S_MVPARAM_HDR_T*)&param_rectifier_enable, (S_MVPARAM_HDR_T*)&param_freq, (S_MVPARAM_HDR_T*)&param_width, \
+};
 
 
 
-TCORERCT::TCORERCT (THALLDIG *rectifier, S_GPIOPIN *sdcact, S_GPIOPIN *c_pout, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m, TAIN *ain, TTINA226 *vc_mr, TTINA226 *vc_s, TPIDPWM *mot)
+TCORERCT::TCORERCT ( TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m, TAIN *ain, THBRIDGE *hbr)
 {
-	c_pin_xdc_opto_en = sdcact;
-	motor_pid = mot;
-	va_motor = vc_mr;
-	va_src24 = vc_s;
+	f_mm_select_freq = true;
+	h_bridge = hbr;
+	
 	ainobj = ain;
-	ain_array[EAINPIN_320V] = ainobj->adr_voltage(EAINPIN_320V);
-	ain_array[EAINPIN_BAT] = ainobj->adr_voltage(EAINPIN_BAT);
-	ain_array[EAINPIN_SRC24V] = ainobj->adr_voltage(EAINPIN_SRC24V);
-	c_pin_out = c_pout;
-	_pin_low_init_out_pp ( c_pin_out, 1, EHRTGPIOSPEED_MID );
-	_pin_low_init_out_pp ( c_pin_xdc_opto_en, 1, EHRTGPIOSPEED_MID );
-	xdc_optocoupler_en (false);
+	ain_array[EAINPIN_IN_A] = ainobj->adr_voltage(EAINPIN_IN_A);
+	ain_array[EAINPIN_IN_B] = ainobj->adr_voltage(EAINPIN_IN_B);
+	ain_array[EAINPIN_OUT] = ainobj->adr_voltage(EAINPIN_OUT);
+
 	memi2c = m;
 	params = new TPARAMCONTRL (memi2c, 0, 8192, (S_MVPARAM_HDR_T**)curlist, EPRMIX_ENDENUM);
 	params->load ();
-	rectifier_contrl = rectifier;
-	f_system_state = params->get_u32 (EPRMIX_AUTOSTART_ENABLE);
-	rectifier_contrl->enable (f_system_state);
-	rectifier_contrl->set_phase_cb (this);
+
 	canva = c;
 	keys = k;
 	f_lcd_needupdate = true;
 	str_tmp.set_space (strtemporarymem, sizeof(strtemporarymem)-1);
 	set_page (EPAGE_PARAM_LIST);
 	all_params_aply ();
-	f_optocoupler = false;
 	memset (grph_tims, 0, C_GRAPHICS_TIMS_AMOUNT);
 	max_gr_tims = 0;
 	gr_timer = SYSBIOS::CreateCB_SYS ();
@@ -86,53 +67,25 @@ TCORERCT::TCORERCT (THALLDIG *rectifier, S_GPIOPIN *sdcact, S_GPIOPIN *c_pout, T
 	proc_cb_isr_task->Set_ID (ECOREPDC_PROCESS);
 	proc_cb_isr_task->Start_Periodic (1);
 	
-	ptxt_rpm = new TGRAPHPARAM (rectifier, MAV_PARAM_TYPE_UINT32, EHALPAPAM_RPM, 20);
-	ptxt_rpm->set_prephix (txt_rpm);
 	
 	f_pulses_state = false;
-	ptxt_pulses = new TGRAPHPARAM (&f_pulses_state, 10, txt_pulses_on);
-	ptxt_pulses->set_prephix (txt_pulses);
-	
-	ptxt_state = new TGRAPHPARAM (&f_system_state, 10, txt_state_on);
-	ptxt_state->set_prephix (txt_sysstate);
-	
-	ptxt_v320_v = new TGRAPHPARAM (ain->adr_voltage (EAINPIN_320V), 16, 0);
-	ptxt_v320_v->set_prephix (txt_SRC);
-	ptxt_v320_v->set_postfix (txt_V);
+	ptxt_wrk_state = new TGRAPHPARAM (&f_pulses_state, 10, txt_pulses_on);
+	ptxt_wrk_state->set_prephix (txt_pulses);
 
-	ptxt_v24_v = new TGRAPHPARAM (ain->adr_voltage (EAINPIN_SRC24V), 16, 1);
-	ptxt_v24_v->set_prephix (txt_OUT);
-	ptxt_v24_v->set_postfix (txt_V);
 	
-	ptxt_v24_a = new TGRAPHPARAM (va_src24->adr_current (), 16, 1);
-	ptxt_v24_a->set_postfix (txt_A);
+	ptxt_a_in_v = new TGRAPHPARAM (ain->adr_voltage (EAINPIN_IN_A), 16, 0);
+	ptxt_a_in_v->set_prephix (txt_SRC);
+	ptxt_a_in_v->set_postfix (txt_V);
+
+	ptxt_b_in_v = new TGRAPHPARAM (ain->adr_voltage (EAINPIN_IN_B), 16, 1);
+	ptxt_b_in_v->set_prephix (txt_OUT);
+	ptxt_b_in_v->set_postfix (txt_V);
 	
-	ptxt_v12bat_v = new TGRAPHPARAM (ain->adr_voltage (EAINPIN_BAT), 16, 1);
-	ptxt_v12bat_v->set_prephix (txt_BAT);
-	ptxt_v12bat_v->set_postfix (txt_V);
-	
-	ptxt_pdenum = new TGRAPHPARAM (&pd_state, 16, txt_pidenum, EPIDSTATE_ENDENUM);
-	ptxt_pdenum->set_prephix (txt_pd);
-	
-	ptxt_mot_v = new TGRAPHPARAM (va_motor->adr_volt(), 16, 1);
-	ptxt_mot_v->set_prephix (txt_MOT);
-	ptxt_mot_v->set_postfix (txt_V);
-	
-	ptxt_mot_a = new TGRAPHPARAM (va_motor->adr_current (), 16, 1);
-	ptxt_mot_a->set_postfix (txt_A);
-	
-	ptxt_optocoupler = new TGRAPHPARAM (&f_optocoupler, 10, txt_opto_on);
-	ptxt_optocoupler->set_prephix (txt_opto);
+	ptxt_out_v = new TGRAPHPARAM (ain->adr_voltage (EAINPIN_OUT), 16, 1);
+	ptxt_out_v->set_prephix (txt_BAT);
+	ptxt_out_v->set_postfix (txt_V);
 
 }
-
-
-
-void TCORERCT::xdc_optocoupler_en (bool v)
-{
-	_pin_output (c_pin_xdc_opto_en, !v);
-}
-
 
 
 
@@ -164,129 +117,24 @@ void TCORERCT::timer_cb (uint32_t id)
 
 
 
-void TCORERCT::cb_ifhall_phase (uint32_t ps)
-{
-	switch (ps)
-		{
-		case EANGLPCOD_A: 
-		case EANGLPCOD_C:
-			{
-			_pin_output (c_pin_out, true);
-			break;
-			}
-		case EANGLPCOD_D:
-		case EANGLPCOD_B:
-			{
-			_pin_output (c_pin_out, false);
-			break;
-			}
-		default: break;
-		}
-}
-
-
-
 void TCORERCT::params_aply (EPRMIX ix)
 {
 	uint32_t val_u32 = params->get_u32 (ix);
 	float val_f = params->get_f (ix);
 	switch (ix)
 		{
-		//case EPRMIX_AUTOSTART_ENABLE: none
-		case EPRMIX_WORK_MOTOR_RPM:
+		case EPRMIX_FREQ:
 			{
-			seting_work_rpm = val_u32;
-			motor_pid->set_freq (((float)seting_work_rpm / 60.0F));
+			
 			break;
 			}
-		case EPRMIX_START_SYS_RPM:
+		case EPRMIX_WIDTH:
 			{
-			seting_start_sys_rpm = val_u32;
-			break;
-			}
-		case EPRMIX_MOTOR_P:
-			{
-			seting_motor_P = val_f;
-			motor_pid->set_p (seting_motor_P);
-			break;
-			}
-		case EPRMIX_MOTOR_D:
-			{
-			seting_motor_I = val_f;
-			motor_pid->set_i (seting_motor_I);
-			break;
-			}
-		case EPRMIX_R_ANGLE_ON:
-			{
-			seting_angle_pulse_on = val_f;
-			param_angles_aply ();
-			break;
-			}
-		case EPRMIX_R_ANGLE_OFF:
-			{
-			seting_angle_pulse_off = val_f;
-			param_angles_aply ();
-			break;
-			}
-		case EPRMIX_R_ANGLE_OFFSET:
-			{
-			seting_angle_offset = val_f;
-			param_angles_aply ();
-			break;
-			}
-		case EPRMIX_MAGNETS_N:
-			{
-			seting_magnets_pair = val_u32;
-			break;
-			}
-		case EPRMIX_VOLT_ON:
-			{
-			seting_sys_voltage_on = val_f;
-			break;
-			}
-		case EPRMIX_VOLT_OFF:
-			{
-			seting_sys_voltage_off = val_f;
+
 			break;
 			}
 		default: break;
 		}
-}
-
-
-
-void TCORERCT::param_angles_aply ()
-{
-	float s, p, chng, dlt, point_s, point_p;
-	do	{
-			s = params->get_f (EPRMIX_R_ANGLE_ON);
-			p = params->get_f (EPRMIX_R_ANGLE_OFF);
-			if (s < 0) s *= -1.0F;
-			if (p < 0) p *= -1.0F;
-
-			if (p >= s)
-				{
-				point_s = s;
-				point_p = p;
-				}
-			else
-				{
-				point_s = p;
-				point_p = s;
-				}
-			dlt = point_p - point_s;
-			if (dlt < C_MINIMAL_ANGLE_WIDEBAND) point_p = point_s + C_MINIMAL_ANGLE_WIDEBAND;
-
-			rectifier_contrl->add_replace_point (s, EANGLPCOD_A);
-			rectifier_contrl->add_replace_point (p, EANGLPCOD_B);
-			/*
-			point_s = point_s + 180;
-			point_p = point_p + 180;
-			rectifier_contrl->add_replace_point (s,EANGLPCOD_C);
-			rectifier_contrl->add_replace_point (p,EANGLPCOD_D);
-			*/
-				
-			}	while (false);	
 }
 
 
@@ -536,6 +384,52 @@ else
 
 
 
+void TCORERCT::param_change_updown (long prm_ix, bool finc, float multval)
+{
+	S_BASETAGPARAM_T *tag = (S_BASETAGPARAM_T*)params->get_param_tag (prm_ix);
+	if (tag)
+		{
+		switch (tag->hdr.type)
+			{
+			case MAV_PARAM_TYPE_UINT32:
+				{
+				long val = tag->value.u.u32;
+				if (finc)
+					{
+					val += (tag->step_val.u.u32 * multval);
+					if (val > tag->max.u.u32) val = tag->max.u.u32;
+					}
+				else
+					{
+					val -= (tag->step_val.u.u32 * multval);
+					if (val < (long)tag->min.u.u32) val = tag->min.u.u32;
+					}
+				tag->value.u.u32 = val;
+				break;
+				}
+			case MAV_PARAM_TYPE_REAL32:
+				{
+				float val = tag->value.u.f;
+				if (finc)
+					{
+					val += (tag->step_val.u.f * multval);
+					if (val > tag->max.u.f) val = tag->max.u.f;
+					}
+				else
+					{
+					val -= (tag->step_val.u.f * multval);
+					if (val < tag->min.u.f) val = tag->min.u.f;
+					}
+				tag->value.u.f = val;
+				break;
+				}
+			}
+		}
+}
+
+
+
+/*
 void TCORERCT::param_change_updown (long prm_ix, bool finc)
 {
 	S_BASETAGPARAM_T *tag = (S_BASETAGPARAM_T*)params->get_param_tag (prm_ix);
@@ -578,6 +472,7 @@ void TCORERCT::param_change_updown (long prm_ix, bool finc)
 			}
 		}
 }
+*/
 
 
 
@@ -649,7 +544,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 				{
 				if (f_is_edit_param_mode)
 					{
-					param_change_updown (edit_param_ix, true);
+					param_change_updown (edit_param_ix, true, 1);
 					params_aply ((EPRMIX)edit_param_ix);
 					f_lcd_needupdate = true;
 					}
@@ -659,7 +554,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 				{
 				if (f_is_edit_param_mode)
 					{
-					param_change_updown (edit_param_ix, false);
+					param_change_updown (edit_param_ix, false, 1);
 					params_aply ((EPRMIX)edit_param_ix);
 					f_lcd_needupdate = true;
 					}
@@ -675,7 +570,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 			pushtime = keys->get_pushtime_cur (EKEYSID_LEFT);
 			if (pushtime)
 				{
-				param_change_updown (edit_param_ix, true);
+				param_change_updown (edit_param_ix, true, 1);
 				key_rep_timer.set (calc_repeate_frompushtime (pushtime));
 				keys->block_next_msg (EKEYSID_LEFT);
 				params_aply ((EPRMIX)edit_param_ix);
@@ -684,7 +579,7 @@ void TCORERCT::draw_edit_param_task (const S_PGMESSAGE_T &msg)
 			pushtime = keys->get_pushtime_cur (EKEYSID_RIGHT);
 			if (pushtime)
 				{
-				param_change_updown (edit_param_ix, false);
+				param_change_updown (edit_param_ix, false, 1);
 				key_rep_timer.set (calc_repeate_frompushtime (pushtime));
 				keys->block_next_msg (EKEYSID_RIGHT);
 				params_aply ((EPRMIX)edit_param_ix);
@@ -773,80 +668,23 @@ void TCORERCT::draw_main_screens ()
 	
 	if (!grph_tims[EGTIM_W_MAIN_STATE])
 		{
-		canva->draw_param (0, yk, ptxt_state, VID::EGALIGN_LEFT, 55, true);
+		canva->draw_param (0, yk, ptxt_wrk_state, VID::EGALIGN_LEFT, 55, true);
 		grph_tims[EGTIM_W_MAIN_STATE] = 1000;
 		f_lcd_needupdate = true;
 		}
-	if (!grph_tims[EGTIM_W_MAIN_RPM])
+	yk += 14;
+	if (!grph_tims[EGTIM_VOLT_IN])
 		{
-		canva->draw_param (55, yk, ptxt_rpm, VID::EGALIGN_LEFT, 60, true);
-		grph_tims[EGTIM_W_MAIN_RPM] = 500;
+		canva->draw_param (0, yk, ptxt_a_in_v, VID::EGALIGN_LEFT, 60, true);
+		grph_tims[EGTIM_VOLT_IN] = 500;
 		f_lcd_needupdate = true;
 		}
 		
 	yk += 12;
-	if (!grph_tims[EGTIM_W_MAIN_SRC_320V])
+	if (!grph_tims[EGTIM_VOLT_OUT])
 		{
-		canva->draw_param (0, yk, ptxt_v320_v, VID::EGALIGN_LEFT, 60, true);
-		grph_tims[EGTIM_W_MAIN_SRC_320V] = 500;
-		f_lcd_needupdate = true;
-		}
-		
-	if (!grph_tims[EGTIM_W_MAIN_PULSES])
-		{
-		canva->draw_param (62, yk, ptxt_pulses, VID::EGALIGN_LEFT, 50, true);
-		grph_tims[EGTIM_W_MAIN_PULSES] = 500;
-		f_lcd_needupdate = true;
-		}
-		
-	if (!grph_tims[EGTIM_W_MAIN_OPTO])
-		{
-		canva->draw_param (95, yk, ptxt_optocoupler, VID::EGALIGN_LEFT, 30, true);
-		grph_tims[EGTIM_W_MAIN_OPTO] = 500;
-		f_lcd_needupdate = true;
-		}
-		
-	yk += 14;
-	if (!grph_tims[EGTIM_W_MAIN_DST24_V])
-		{
-		canva->draw_param (0, yk, ptxt_v24_v, VID::EGALIGN_LEFT, 70, true);
-		grph_tims[EGTIM_W_MAIN_DST24_V] = 500;
-		f_lcd_needupdate = true;
-		}
-		
-	if (!grph_tims[EGTIM_W_MAIN_DST24_A])
-		{
-		canva->draw_param (80, yk, ptxt_v24_a, VID::EGALIGN_LEFT, 48, true);
-		grph_tims[EGTIM_W_MAIN_DST24_A] = 500;
-		f_lcd_needupdate = true;
-		}
-		
-	yk += 12;	
-	if (!grph_tims[EGTIM_W_MAIN_BAT12V])
-		{
-		canva->draw_param (0, yk, ptxt_v12bat_v, VID::EGALIGN_LEFT, 70, true);
-		grph_tims[EGTIM_W_MAIN_BAT12V] = 500;
-		f_lcd_needupdate = true;
-		}
-	if (!grph_tims[EGTIM_W_ERROR_PID])
-		{
-		canva->draw_param (65, yk, ptxt_pdenum, VID::EGALIGN_LEFT, 60, true);
-		grph_tims[EGTIM_W_ERROR_PID] = 500;
-		f_lcd_needupdate = true;
-		}
-		
-	yk += 12;	
-	if (!grph_tims[EGTIM_W_MAIN_MOT_V])
-		{
-		canva->draw_param (0, yk, ptxt_mot_v, VID::EGALIGN_LEFT, 70, true);
-		grph_tims[EGTIM_W_MAIN_MOT_V] = 500;
-		f_lcd_needupdate = true;
-		}
-		
-	if (!grph_tims[EGTIM_W_MAIN_MOT_A])
-		{
-		canva->draw_param (80, yk, ptxt_mot_a, VID::EGALIGN_LEFT, 48, true);
-		grph_tims[EGTIM_W_MAIN_MOT_A] = 500;
+		canva->draw_param (0, yk, ptxt_out_v, VID::EGALIGN_LEFT, 60, true);
+		grph_tims[EGTIM_VOLT_OUT] = 500;
 		f_lcd_needupdate = true;
 		}
 		
@@ -855,17 +693,32 @@ void TCORERCT::draw_main_screens ()
 
 
 
+float TCORERCT::gen_myltvalue_fromkt (uint32_t time)
+{
+	float rv = 1.0F;
+	if (time > 1000)
+		{
+		float rslt = time - 1000;
+		rslt /= 500;
+		if (rslt > rv) rv = rslt;
+		}
+	return rv;
+}
+
+
 
 void TCORERCT::draw_main_page_task (const S_PGMESSAGE_T &msg)
 {
-
+uint32_t pushtime;
+long chng_param_ix = EPRMIX_FREQ;
+if (!f_mm_select_freq) chng_param_ix = EPRMIX_WIDTH;
 	if (msg.msg == EJSTMSG_CLICK)
 		{
 		switch (msg.key)
 			{
 			case EKEYSID_ONOFF:
 				{
-				f_system_state = !f_system_state;
+				f_pulses_state = !f_pulses_state;
 				grph_tims[EGTIM_W_MAIN_STATE] = 0;
 				break;
 				}
@@ -876,32 +729,51 @@ void TCORERCT::draw_main_page_task (const S_PGMESSAGE_T &msg)
 				}
 			case EKEYSID_SELECT:
 				{
-				f_is_edit_param_mode = !f_is_edit_param_mode;
+				f_mm_select_freq = !f_mm_select_freq;
+				params->save ();
 				break;
 				}
 			case EKEYSID_LEFT:
 				{
-				if (f_is_edit_param_mode)
-					{
-					param_change_updown (edit_param_ix, true);
-					params_aply ((EPRMIX)edit_param_ix);
-					f_lcd_needupdate = true;
-					}
+				inc_dec_freq_val = 1;
+				param_change_updown (chng_param_ix, true, 1);
+				params_aply ((EPRMIX)chng_param_ix);
+				f_lcd_needupdate = true;
 				break;
 				}
 			case EKEYSID_RIGHT:
 				{
-				if (f_is_edit_param_mode)
-					{
-					param_change_updown (edit_param_ix, false);
-					params_aply ((EPRMIX)edit_param_ix);
-					f_lcd_needupdate = true;
-					}
+				inc_dec_freq_val = 1;
+				param_change_updown (chng_param_ix, false, 1);
+				params_aply ((EPRMIX)chng_param_ix);
+				f_lcd_needupdate = true;
 				break;
 				}
 			}
 		}
 
+	if (!key_rep_timer.get())
+		{
+		pushtime = keys->get_pushtime_cur (EKEYSID_LEFT);
+		if (pushtime)
+			{
+			param_change_updown (chng_param_ix, true, gen_myltvalue_fromkt (pushtime));
+			params_aply ((EPRMIX)chng_param_ix);
+			f_lcd_needupdate = true;
+			}
+			
+			
+		pushtime = keys->get_pushtime_cur (EKEYSID_RIGHT);
+		if (pushtime)
+			{
+			param_change_updown (chng_param_ix, false, gen_myltvalue_fromkt (pushtime));
+			params_aply ((EPRMIX)chng_param_ix);
+			f_lcd_needupdate = true;
+			}
+		key_rep_timer.set (100);
+		}
+
+		
 		canva->SetInverseMode (0);
 		draw_main_screens ();
 		

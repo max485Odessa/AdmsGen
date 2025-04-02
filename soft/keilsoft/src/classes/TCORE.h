@@ -17,21 +17,14 @@
 #include "TAIN.h"
 #include "TPIDMOTOR.h"
 #include "TDRAWPARAM.h"
+#include "THBRIDGE.h"
 
 
 enum EKEYSID {EKEYSID_RIGHT = 0, EKEYSID_LEFT, EKEYSID_SELECT, EKEYSID_MENU , EKEYSID_ONOFF, EKEYSID_ENDENUM};
 enum EPRMIX {\
-	EPRMIX_AUTOSTART_ENABLE = 0, /* автостарт при включении питания */ \
-	EPRMIX_WORK_MOTOR_RPM , /* номинальная скорость мотора в герцах */ \
-	EPRMIX_START_SYS_RPM , /* скорость начала работы системы */ \
-	EPRMIX_MOTOR_P , /* настройка управления мотором */ \
-	EPRMIX_MOTOR_D , /* настройка управления мотором */ \
-	EPRMIX_R_ANGLE_ON , /* настройка системы коммутации */ \
-	EPRMIX_R_ANGLE_OFF , /* настройка системы коммутации */ \
-	EPRMIX_MAGNETS_N , /* общее количество магнитов */ \
-	EPRMIX_VOLT_ON , /* напряжение при котором разрешается преобразование */ \
-	EPRMIX_VOLT_OFF , /* напряжение при котором запрещается преобразование */ \
-	EPRMIX_R_ANGLE_OFFSET, /* угловое смещение относительно датчика хола (в пределах от 0 до 359.5 градусов)  */ \
+	EPRMIX_AUTOSTART_ENABLE = 0,
+	EPRMIX_FREQ ,
+	EPRMIX_WIDTH ,
   EPRMIX_ENDENUM };
 
 
@@ -55,7 +48,7 @@ typedef struct {
 #define C_GRAPHICS_TIMS_AMOUNT 12
 
 // графические таймера визуального обновления величины
-enum EGTIM_W_MAIN {EGTIM_W_MAIN_STATE = 0, EGTIM_W_MAIN_RPM, EGTIM_W_MAIN_SRC_320V, EGTIM_W_MAIN_DST24_V, EGTIM_W_MAIN_MOT_V, EGTIM_W_MAIN_BAT12V, EGTIM_W_MAIN_MOT_A, EGTIM_W_MAIN_DST24_A, EGTIM_W_MAIN_PULSES, EGTIM_W_MAIN_OPTO, EGTIM_W_ERROR_PID, EGTIM_W_MAIN_ENDENUM};
+enum EGTIM_W_MAIN {EGTIM_W_MAIN_STATE = 0, EGTIM_VOLT_IN, EGTIM_VOLT_OUT, EGTIM_W_MAIN_ENDENUM};
 enum EPAGE {EPAGE_NONE = 0, EPAGE_MAIN, EPAGE_PARAM_EDIT, EPAGE_PARAM_LIST, EPAGE_ENDENUM};
 enum ECOREPDC {ECOREPDC_TIMS = 0, ECOREPDC_PROCESS, ECOREPDC_ENDENUM};
 
@@ -63,7 +56,7 @@ enum ECOREPDC {ECOREPDC_TIMS = 0, ECOREPDC_PROCESS, ECOREPDC_ENDENUM};
 #define C_MAXSRC_VOLTAGE 400.0F
 #define C_MINIMAL_ANGLE_WIDEBAND 1.0F
 
-class TCORERCT: public TFFC, public IFHALLPHASECB, public SYSBIOS::TimerCB {
+class TCORERCT: public TFFC, public SYSBIOS::TimerCB {
 		uint8_t gui_item_param_height ();
 		uint8_t border_updown_height ();
 		uint8_t gui_dislp_item_cnt ();
@@ -75,7 +68,9 @@ class TCORERCT: public TFFC, public IFHALLPHASECB, public SYSBIOS::TimerCB {
 		bool f_is_edit_param_mode;
 		bool f_lcd_needupdate;
 	
-		void cb_ifhall_phase (uint32_t ps) override;		// iface IFHALLCB
+		bool f_mm_select_freq;
+		uint32_t inc_dec_freq_val;
+		float gen_myltvalue_fromkt (uint32_t t);
 	
 		float *ain_array[EAINPIN_ENDENUM];
 
@@ -95,53 +90,33 @@ class TCORERCT: public TFFC, public IFHALLPHASECB, public SYSBIOS::TimerCB {
 		
 		uint32_t seting_work_rpm;
 		uint32_t seting_start_sys_rpm;
-		float seting_motor_P;
-		float seting_motor_I;
-		float seting_angle_pulse_on;
-		float seting_angle_pulse_off;
-		float seting_angle_offset;
+
+
 		uint32_t seting_magnets_pair;
-		float seting_sys_voltage_on;
-		float seting_sys_voltage_off;
+
 		
-		void param_angles_aply ();
 	
 	protected:
 		virtual void Task () override;
 		uint8_t strtemporarymem[128];
 		TSTMSTRING str_tmp;
 	
-		TGRAPHPARAM *ptxt_state;	// ok
-		TGRAPHPARAM *ptxt_rpm;		// pk
-		TGRAPHPARAM *ptxt_v320_v;	// src
-		TGRAPHPARAM *ptxt_v24_v;	// out
-		TGRAPHPARAM *ptxt_v24_a;	// out
-		TGRAPHPARAM *ptxt_v12bat_v;	// bat
-		TGRAPHPARAM *ptxt_mot_v;	// mot
-		TGRAPHPARAM *ptxt_mot_a;	// mot
-		TGRAPHPARAM *ptxt_pulses;	// phase pulses
-		TGRAPHPARAM *ptxt_optocoupler;	// optocoupler
-		TGRAPHPARAM *ptxt_pdenum;	// optocoupler
-		
-		bool f_system_state;
-		bool f_pulses_state;
-		bool f_optocoupler;
-	
-		uint8_t pd_state;
 
-		//void draw_param (short x, short y, TGRAPHPARAM *p);
+		TGRAPHPARAM *ptxt_a_in_v;	// in a
+		TGRAPHPARAM *ptxt_b_in_v;	// in b
+		TGRAPHPARAM *ptxt_out_v;	// out
+		TGRAPHPARAM *ptxt_wrk_state;	// work
+
+		
+		bool f_pulses_state;
 	
 		TPARAMCONTRL *params;
 	
-		THALLDIG *rectifier_contrl;
 		TLCDCANVABW *canva;
 		TEASYKEYS *keys;
 		TM24CIF *memi2c;
 		TAIN *ainobj;
-		TPIDPWM *motor_pid;
-	
-		TTINA226 *va_motor;
-		TTINA226 *va_src24;
+		THBRIDGE *h_bridge;
 	
 		SYSBIOS::Timer key_rep_timer;
 		SYSBIOS::Timer sw_timer;
@@ -160,7 +135,8 @@ class TCORERCT: public TFFC, public IFHALLPHASECB, public SYSBIOS::TimerCB {
 		void cursor_down ();
 		void set_edit_mode (bool v);
 		
-		void param_change_updown (long p, bool finc);
+		//void param_change_updown (long p, bool finc);
+		void param_change_updown (long p, bool finc, float multval);
 		void draw_item_param (long prm_ix, long y_k, bool is_curs, bool is_edit);
 		
 		bool f_settings_changed;
@@ -171,13 +147,9 @@ class TCORERCT: public TFFC, public IFHALLPHASECB, public SYSBIOS::TimerCB {
 		void params_aply (EPRMIX ix);
 		void all_params_aply ();
 		
-		S_GPIOPIN *c_pin_out;
-		S_GPIOPIN *c_pin_xdc_opto_en;
-		
-		void xdc_optocoupler_en (bool v);
 		
 	public:
-		TCORERCT (THALLDIG *rectifier, S_GPIOPIN *sdcact, S_GPIOPIN *c_pout, TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m, TAIN *ain, TTINA226 *vc_mr, TTINA226 *vc_s, TPIDPWM *mot);
+		TCORERCT (TLCDCANVABW *c, TEASYKEYS *k, TM24CIF *m, TAIN *ain, THBRIDGE *hbr);
 		bool is_lcd_update ();
 		void set_page (EPAGE p);
 };

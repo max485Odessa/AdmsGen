@@ -405,11 +405,6 @@
               <FilePath>.\src\classes\TCORE.cpp</FilePath>
             </File>
             <File>
-              <FileName>TINA226.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\src\classes\TINA226.cpp</FilePath>
-            </File>
-            <File>
               <FileName>TCORE_PROC.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>.\src\classes\TCORE_PROC.cpp</FilePath>
@@ -643,16 +638,6 @@
               <FileName>THBRIDGE.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\..\..\..\..\MPULIBS\ISTMCLASS\THBRIDGE.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>TPIDMOTOR.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\..\..\..\..\MPULIBS\ISTMCLASS\TPIDMOTOR.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>THALLDIG.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\..\..\..\..\MPULIBS\ISTMCLASS\THALLDIG.cpp</FilePath>
             </File>
           </Files>
         </Group>
